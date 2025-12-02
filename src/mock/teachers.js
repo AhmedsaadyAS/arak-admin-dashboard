@@ -1,0 +1,50 @@
+export const teachersData = [
+    {
+        id: 1,
+        name: 'Maria Historia',
+        teacherId: '#T123456789',
+        photo: null,
+        email: 'historia@mail.com',
+        phone: '+62 812 3456 9001',
+        subject: 'History',
+        city: 'Jakarta',
+        dateJoined: 'March 25, 2021',
+        status: 'Active',
+        about: 'Passionate about bringing history to life for students. 15 years of teaching experience.',
+        education: 'Master of Arts in History, University of Indonesia',
+        expertise: ['World History', 'Indonesian History', 'Ancient Civilizations'],
+        assignedClasses: ['VII A', 'VII B', 'VIII A']
+    },
+    {
+        id: 2,
+        name: 'John Math',
+        teacherId: '#T123456790',
+        photo: null,
+        email: 'math@mail.com',
+        phone: '+62 812 3456 9002',
+        subject: 'Mathematics',
+        city: 'Jakarta',
+        dateJoined: 'March 25, 2021',
+        status: 'Active',
+        about: 'Making math fun and accessible for all students. Specializing in innovative teaching methods.',
+        education: 'Bachelor of Science in Mathematics, ITB',
+        expertise: ['Algebra', 'Geometry', 'Calculus'],
+        assignedClasses: ['VII A', 'VIII B']
+    },
+    {
+        id: 3,
+        name: 'Sarah Physics',
+        teacherId: '#T123456791',
+        photo: null,
+        email: 'physics@mail.com',
+        phone: '+62 812 3456 9003',
+        subject: 'Physics',
+        city: 'Jakarta',
+        dateJoined: 'March 25, 2021',
+        status: 'Active',
+        about: 'Dedicated to inspiring the next generation of scientists through hands-on experiments.',
+        education: 'PhD in Physics, National University of Singapore',
+        expertise: ['Mechanics', 'Thermodynamics', 'Optics'],
+        assignedClasses: ['VIII A', 'VIII B', 'IX A']
+    }
+];

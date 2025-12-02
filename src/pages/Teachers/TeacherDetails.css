@@ -1,0 +1,151 @@
+.teacher-header-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    margin-bottom: 2rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.teacher-header-left {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+}
+
+.teacher-photo {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--secondary-color), var(--yellow-color));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 2rem;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.teacher-header-info h2 {
+    margin: 0 0 0.5rem 0;
+    color: var(--text-dark);
+}
+
+.teacher-id {
+    color: var(--text-gray);
+    margin: 0 0 1rem 0;
+}
+
+.teacher-badges {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.teacher-header-right {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.teacher-details-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+}
+
+.teacher-main-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.teacher-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.education-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.education-item h4 {
+    margin: 0 0 0.75rem 0;
+    color: var(--text-dark);
+    font-size: 0.95rem;
+}
+
+.education-item p {
+    margin: 0;
+    color: var(--text-gray);
+    line-height: 1.6;
+}
+
+.expertise-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.classes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.class-card {
+    display: flex;
+    gap: 1rem;
+    padding: 1.25rem;
+    background: #F3F4FF;
+    border-radius: 12px;
+    align-items: center;
+    transition: transform 0.2s;
+}
+
+.class-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(77, 68, 181, 0.15);
+}
+
+.class-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.class-info h4 {
+    margin: 0 0 0.25rem 0;
+    color: var(--text-dark);
+    font-size: 1rem;
+}
+
+.class-info p {
+    margin: 0;
+    color: var(--text-gray);
+    font-size: 0.85rem;
+}
+
+.schedule-room {
+    font-size: 0.75rem !important;
+    color: var(--primary-color) !important;
+    font-weight: 500 !important;
+}
+
+.stats-overview {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    padding: 1rem 0;
+}

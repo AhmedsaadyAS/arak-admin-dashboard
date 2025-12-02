@@ -1,0 +1,297 @@
+.back-button {
+    margin-bottom: 1.5rem;
+    padding: 0.5rem 1.5rem;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.back-button:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.student-header-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    margin-bottom: 2rem;
+    display: grid;
+    grid-template-columns: 2fr 2fr 1fr;
+    gap: 2rem;
+}
+
+.student-header-left {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+}
+
+.student-photo {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 2rem;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.student-header-info h2 {
+    margin: 0 0 0.5rem 0;
+    color: var(--text-dark);
+}
+
+.student-id {
+    color: var(--text-gray);
+    margin: 0 0 1rem 0;
+}
+
+.student-badges {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.student-header-right {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.info-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--text-gray);
+    font-size: 0.9rem;
+}
+
+.info-row svg {
+    color: var(--primary-color);
+}
+
+.student-header-parent {
+    border-left: 2px solid #f3f4f6;
+    padding-left: 1.5rem;
+}
+
+.student-header-parent h4 {
+    margin: 0 0 1rem 0;
+    color: var(--text-dark);
+}
+
+.student-header-parent p {
+    margin: 0.5rem 0;
+    color: var(--text-gray);
+    font-size: 0.9rem;
+}
+
+.student-details-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+}
+
+.student-main-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.student-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.status-badge {
+    padding: 0.3rem 0.8rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.status-present {
+    background: #E6F9F0;
+    color: #00B69B;
+}
+
+.status-absent {
+    background: #FEECEC;
+    color: #EE3636;
+}
+
+.status-late {
+    background: #FFF4E5;
+    color: #FFA756;
+}
+
+.risk-card {
+    border-left-width: 4px;
+}
+
+.risk-level {
+    text-align: center;
+    padding: 1.5rem 0;
+}
+
+.risk-level h2 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.8rem;
+}
+
+.risk-level p {
+    margin: 0;
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.risk-insights {
+    padding: 1rem 0 0 0;
+}
+
+.risk-insights h4 {
+    margin: 0 0 0.75rem 0;
+    font-size: 0.9rem;
+    color: var(--text-dark);
+}
+
+.risk-insights ul {
+    margin: 0;
+    padding-left: 1.5rem;
+}
+
+.risk-insights li {
+    margin: 0.5rem 0;
+    font-size: 0.85rem;
+    color: var(--text-gray);
+    line-height: 1.5;
+}
+
+.attendance-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 1rem 0;
+}
+
+.summary-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 8px solid var(--primary-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+.summary-circle .percentage {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.summary-circle .label {
+    font-size: 0.8rem;
+    color: var(--text-gray);
+}
+
+.summary-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 0.25rem;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: var(--text-gray);
+}
+
+.schedule-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.schedule-item {
+    display: flex;
+    gap: 1rem;
+    padding: 0.75rem;
+    background: #f9fafb;
+    border-radius: 8px;
+}
+
+.schedule-day {
+    font-weight: bold;
+    color: var(--primary-color);
+    font-size: 0.85rem;
+    min-width: 60px;
+}
+
+.schedule-details strong {
+    color: var(--text-dark);
+    font-size: 0.9rem;
+}
+
+.schedule-details p {
+    margin: 0.25rem 0 0 0;
+    font-size: 0.8rem;
+    color: var(--text-gray);
+}
+
+.schedule-teacher {
+    font-size: 0.75rem !important;
+    font-style: italic;
+}
+
+.fees-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem 0;
+}
+
+.fee-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.fee-item:last-child {
+    border-bottom: none;
+}
+
+.fee-label {
+    font-size: 0.9rem;
+    color: var(--text-gray);
+}
+
+.fee-value {
+    font-size: 1rem;
+    font-weight: bold;
+    color: var(--text-dark);
+}

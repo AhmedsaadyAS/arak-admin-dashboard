@@ -1,0 +1,234 @@
+:root {
+  --primary-color: #4D44B5;
+  /* Purple/Blue from design */
+  --secondary-color: #FB7D5B;
+  /* Orange accent */
+  --yellow-color: #FCC43E;
+  /* Yellow accent */
+  --dark-bg: #1a2b4b;
+  /* Dark sidebar background */
+  --light-bg: #F3F4FF;
+  /* Light main background */
+  --text-dark: #303972;
+  --text-gray: #A098AE;
+  --sidebar-width: 280px;
+  --header-height: 80px;
+}
+
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--light-bg);
+}
+
+.app-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-left: var(--sidebar-width);
+}
+
+.app-content {
+  padding: 2rem;
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Sidebar */
+.sidebar {
+  width: var(--sidebar-width);
+  background: var(--primary-color);
+  /* Using primary color as base, or dark blue */
+  background: #151f32;
+  /* Darker blue for sidebar based on image */
+  color: white;
+  position: fixed;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem 1.5rem;
+  z-index: 100;
+}
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 3rem;
+  padding-left: 0.5rem;
+}
+
+.logo-img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.logo-text {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  border: none;
+  background: transparent;
+  color: #C1BBEB;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 12px;
+  /* Rounded corners for menu items */
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.sidebar-item:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-item-active {
+  background: white;
+  color: var(--primary-color);
+}
+
+.sidebar-item-active:hover {
+  background: white;
+  color: var(--primary-color);
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  font-size: 0.8rem;
+  color: #6b7280;
+  text-align: center;
+}
+
+/* Topbar */
+.topbar {
+  height: var(--header-height);
+  background: transparent;
+  /* Transparent background to blend with page */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  margin-top: 1rem;
+}
+
+.topbar-title h2 {
+  font-size: 2rem;
+  color: var(--text-dark);
+  font-weight: 700;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.search-bar {
+  background: white;
+  border-radius: 40px;
+  padding: 0.8rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  width: 300px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
+}
+
+.search-icon {
+  color: var(--primary-color);
+}
+
+.search-bar input {
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 0.95rem;
+  color: var(--text-dark);
+}
+
+.action-icons {
+  display: flex;
+  gap: 1rem;
+}
+
+.icon-btn {
+  background: white;
+  border: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #A098AE;
+  cursor: pointer;
+  position: relative;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s ease;
+}
+
+.icon-btn:hover {
+  background: var(--primary-color);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(77, 68, 181, 0.3);
+}
+
+.notification-dot {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  width: 8px;
+  height: 8px;
+  background: var(--primary-color);
+  border-radius: 50%;
+  border: 2px solid white;
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.user-info {
+  text-align: right;
+}
+
+.user-name {
+  display: block;
+  font-weight: 700;
+  color: var(--text-dark);
+  font-size: 0.9rem;
+}
+
+.user-role {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-gray);
+}
+
+.user-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: #C1BBEB;
+  /* Placeholder color */
+}
