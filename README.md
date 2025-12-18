@@ -15,11 +15,13 @@ Arak Admin Dashboard is a comprehensive school administration platform that enab
 ### ✨ Key Features
 
 - **📊 Dashboard** — Real-time statistics and charts for student performance, attendance trends, and financial summaries
+- **📈 Reports & Analytics** — Detailed reports for student attendance and grades with export capabilities
 - **👨‍🎓 Student Management** — Comprehensive student profiles with grades, attendance, parent information, and enrollment history
 - **👩‍🏫 Teacher Management** — Teacher profiles, subject assignments, experience tracking, and professional details
 - **📅 Events Calendar** — Manage school events including classes, meetings, field trips, and parties
+- **📅 Schedule Management** — Class scheduling with bulk import functionality
 - **💰 Fees & Invoices** — Invoice generation, payment tracking, and financial reporting with status filters
-- **💬 Chat System** — Real-time messaging between administrators, teachers, and parents
+- **💬 Chat System** — Real-time messaging with conversation history and filtering
 - **📈 Activity Feed** — Centralized activity log with AI-powered insights for student risk assessment
 - **👥 User & Role Management** — Advanced user administration with role-based permissions for admin and parent users
 - **🤖 AI Insights** — Simple AI risk analysis for student performance and behavior patterns
@@ -50,8 +52,10 @@ arak-admin/
 │   │   ├── Dashboard/      # Main dashboard
 │   │   ├── Students/       # Student list & details
 │   │   ├── Teachers/       # Teacher list & details
+│   │   ├── Schedule/       # Class scheduling & upload
 │   │   ├── Events/         # Calendar view
 │   │   ├── Fees/           # Invoice management
+│   │   ├── Reports/        # Analytics & Reporting
 │   │   ├── Chat/           # Messaging interface
 │   │   ├── Activity/       # AI insights & activity log
 │   │   ├── User/           # User & role management
