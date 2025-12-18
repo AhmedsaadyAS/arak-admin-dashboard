@@ -8,11 +8,13 @@ import TeachersList from "./pages/Teachers/TeachersList";
 import TeacherDetails from "./pages/Teachers/TeacherDetails";
 import Events from "./pages/Events/Events";
 import Fees from "./pages/Fees/Fees";
+import Reports from "./pages/Reports/Reports";
 import Chat from "./pages/Chat/Chat";
 import Activity from "./pages/Activity/Activity";
 import UserManagement from "./pages/User/UserManagement";
 import UserProfile from "./pages/User/UserProfile";
 import Settings from "./pages/Settings/Settings";
+import Schedule from "./pages/Schedule/Schedule";
 import "./styles/global.css";
 import "./styles/layout.css";
 
@@ -25,8 +27,10 @@ export default function App() {
         dashboard: "Dashboard",
         students: "Students",
         teachers: "Teachers",
+        schedule: "Schedule",
         events: "Events",
         fees: "Fees & Invoices",
+        reports: "Reports & Analytics",
         activity: "AI Analyser & Activity",
         user: "User Management",
         profile: "User Profile",
@@ -49,11 +53,17 @@ export default function App() {
                 ? <TeacherDetails teacherId={selectedTeacherId} onBack={() => setSelectedTeacherId(null)} />
                 : <TeachersList onViewDetails={(id) => setSelectedTeacherId(id)} />;
             break;
+        case "schedule":
+            content = <Schedule />;
+            break;
         case "events":
             content = <Events />;
             break;
         case "fees":
             content = <Fees />;
+            break;
+        case "reports":
+            content = <Reports />;
             break;
         case "activity":
             content = <Activity />;

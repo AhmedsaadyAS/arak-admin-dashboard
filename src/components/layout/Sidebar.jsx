@@ -7,7 +7,8 @@ import {
     User,
     MessageSquare,
     Activity,
-    CreditCard
+    CreditCard,
+    BarChart2
 } from "lucide-react";
 import logo from "../../assets/logo.png";
 import "../../styles/layout.css";
@@ -16,8 +17,10 @@ const menuItems = [
     { key: "dashboard", label: "Dashboard", icon: <LayoutDashboard size={20} /> },
     { key: "students", label: "Students", icon: <Users size={20} /> },
     { key: "teachers", label: "Teachers", icon: <GraduationCap size={20} /> },
+    { key: "schedule", label: "Schedule", icon: <CalendarDays size={20} /> },
     { key: "events", label: "Event", icon: <CalendarDays size={20} /> },
     { key: "fees", label: "Fees", icon: <CreditCard size={20} /> },
+    { key: "reports", label: "Reports", icon: <BarChart2 size={20} /> },
     { key: "user", label: "User Management", icon: <User size={20} /> },
     { key: "chat", label: "Chat", icon: <MessageSquare size={20} /> },
     { key: "activity", label: "Latest Activity", icon: <Activity size={20} /> },

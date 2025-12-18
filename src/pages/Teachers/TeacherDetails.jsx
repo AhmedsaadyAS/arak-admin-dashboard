@@ -1,16 +1,18 @@
 import React from 'react';
 import { Mail, Phone, MapPin, Calendar, BookOpen, Users } from 'lucide-react';
 import { teachersData } from '../../mock/teachers';
-import { scheduleData } from '../../mock/schedule';
+import { getTeacherSchedule, formatTime, getDayName } from '../../utils/scheduleUtils';
 import './TeacherDetails.css';
 
 export default function TeacherDetails({ teacherId, onBack }) {
     const teacher = teachersData.find(t => t.id === teacherId);
-    const schedule = scheduleData[`teacherSchedule_${teacherId}`] || [];
 
     if (!teacher) {
         return <div className="dashboard-page"><div className="chart-card"><h3>Teacher not found</h3></div></div>;
     }
+
+    const schedule = getTeacherSchedule(teacherId);
+    const weekDays = [0, 1, 2, 3, 4]; // Sun-Thu
 
     return (
         <div className="dashboard-page">
@@ -115,20 +117,25 @@ export default function TeacherDetails({ teacherId, onBack }) {
                         <div className="card-header">
                             <h3>Weekly Schedule</h3>
                         </div>
-                        <div className="schedule-list">
-                            {schedule.map((item, index) => (
-                                <div key={index} className="schedule-item">
-                                    <div className="schedule-day">{item.day}</div>
-                                    <div className="schedule-details">
-                                        <strong>{item.class}</strong>
-                                        <p>{item.time}</p>
-                                        <p className="schedule-room">Room: {item.room}</p>
-                                    </div>
+                        <div className="schedule-list" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            {weekDays.map(day => (
+                                <div key={day}>
+                                    <h5 style={{ color: '#4D44B5', marginBottom: '0.5rem', fontSize: '0.9rem' }}>{getDayName(day)}</h5>
+                                    {schedule[day]?.length > 0 ? (
+                                        schedule[day].map((lesson, idx) => (
+                                            <div key={idx} className="schedule-item" style={{ marginBottom: '0.5rem' }}>
+                                                <div className="schedule-details">
+                                                    <strong>Grade {lesson.classId}</strong>
+                                                    <p>{formatTime(lesson.startTime)} - {formatTime(lesson.endTime)}</p>
+                                                    <p className="schedule-room">Room: {lesson.room}</p>
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <p style={{ fontSize: '0.8rem', color: '#A098AE', fontStyle: 'italic' }}>No classes</p>
+                                    )}
                                 </div>
                             ))}
-                            {schedule.length === 0 && (
-                                <p style={{ textAlign: 'center', color: 'var(--text-gray)', padding: '2rem' }}>No schedule available</p>
-                            )}
                         </div>
                     </div>
 

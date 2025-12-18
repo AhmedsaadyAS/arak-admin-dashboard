@@ -10,7 +10,7 @@ import '../Dashboard/dashboard.css';
 
 export default function UserManagement() {
     // Simulate current logged-in user role (in real app, this would come from auth context)
-    const currentUserRole = "Super Admin"; // Change to test different roles: "School Administrator", "Finance Administrator"
+    const [currentUserRole, setCurrentUserRole] = useState("Super Admin");
 
     const [activeTab, setActiveTab] = useState('admins'); // 'admins' or 'parents'
     const [adminUsers, setAdminUsers] = useState(usersData);
@@ -106,7 +106,7 @@ export default function UserManagement() {
             } else {
                 // Add new admin
                 const newAdmin = {
-                    id: adminUsers.length + 1,
+                    id: Date.now(), // Safer ID generation
                     status: 'Active',
                     lastLogin: 'Never',
                     ...userData
@@ -120,7 +120,7 @@ export default function UserManagement() {
             } else {
                 // Add new parent
                 const newParent = {
-                    id: parents.length + 1,
+                    id: Date.now(), // Safer ID generation
                     status: 'Active',
                     lastLogin: 'Never',
                     createdAt: new Date().toISOString().split('T')[0],
@@ -154,6 +154,21 @@ export default function UserManagement() {
             <div className="card-header" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '1rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <h3>User Management</h3>
+
+                    {/* Dev Tool: Role Switcher */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#FFF4E5', padding: '0.25rem 0.75rem', borderRadius: '8px', border: '1px solid #FFA756' }}>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#B95000' }}>Dev: Switch Role</span>
+                        <select
+                            value={currentUserRole}
+                            onChange={(e) => setCurrentUserRole(e.target.value)}
+                            style={{ border: 'none', background: 'transparent', fontSize: '0.85rem', color: '#B95000', cursor: 'pointer', outline: 'none' }}
+                        >
+                            <option value="Super Admin">Super Admin</option>
+                            <option value="School Administrator">School Admin</option>
+                            <option value="Finance Administrator">Finance Admin</option>
+                            <option value="Teacher">Teacher</option>
+                        </select>
+                    </div>
                     <div className="topbar-actions">
                         <div className="search-bar">
                             <Search size={18} className="search-icon" />

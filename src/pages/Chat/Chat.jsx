@@ -10,6 +10,9 @@ export default function Chat() {
     const [searchTerm, setSearchTerm] = useState('');
     const [filter, setFilter] = useState('All');
 
+    // State for messages to allow local updates
+    const [allMessages, setAllMessages] = useState(messagesData);
+
     const filteredConversations = conversationsData.filter(conv => {
         const matchesSearch = conv.userName.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesFilter = filter === 'All' || conv.userType === filter || (filter === 'Unread' && conv.unread > 0);
@@ -17,47 +20,85 @@ export default function Chat() {
     });
 
     const currentConversation = conversationsData.find(c => c.id === activeConversation);
-    const messages = messagesData[activeConversation] || [];
+    const messages = allMessages[activeConversation] || [];
 
     const handleSendMessage = () => {
         if (messageText.trim()) {
-            alert(`Message sent: ${messageText}`);
+            const newMessage = {
+                id: Date.now(),
+                senderId: 'admin',
+                senderName: 'Admin',
+                text: messageText,
+                timestamp: 'Just now',
+                isAdmin: true
+            };
+
+            setAllMessages(prev => ({
+                ...prev,
+                [activeConversation]: [...(prev[activeConversation] || []), newMessage]
+            }));
             setMessageText('');
         }
     };
 
+    const messagesEndRef = React.useRef(null);
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
+    React.useEffect(() => {
+        scrollToBottom();
+        console.log('Messages updated:', messages);
+    }, [messages]);
+
     return (
-        <div className="dashboard-page">
+        <div className="dashboard-page" style={{ height: 'calc(100vh - 100px)', overflow: 'hidden' }}>
             <div className="chat-container">
-                {/* Left Panel - Conversations */}
+                {/* Left Panel - Sidebar */}
                 <div className="chat-sidebar">
                     <div className="chat-sidebar-header">
                         <h3>Messages</h3>
-                        <button className="icon-btn" style={{ width: '32px', height: '32px' }}>
+                        <button className="icon-btn" style={{ width: '36px', height: '36px' }}>
                             <MoreVertical size={18} />
                         </button>
                     </div>
 
                     <div className="chat-search">
-                        <Search size={18} />
+                        <Search size={18} color="#A098AE" />
                         <input
                             type="text"
-                            placeholder="Search conversations..."
+                            placeholder="Search messages..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
 
                     <div className="chat-filters">
-                        {['All', 'Parents', 'Teachers', 'Unread'].map(f => (
-                            <button
-                                key={f}
-                                className={`filter-btn ${filter === f ? 'active' : ''}`}
-                                onClick={() => setFilter(f)}
-                            >
-                                {f}
-                            </button>
-                        ))}
+                        <button
+                            className={`filter-btn ${filter === 'All' ? 'active' : ''}`}
+                            onClick={() => setFilter('All')}
+                        >
+                            All
+                        </button>
+                        <button
+                            className={`filter-btn ${filter === 'Unread' ? 'active' : ''}`}
+                            onClick={() => setFilter('Unread')}
+                        >
+                            Unread
+                        </button>
+                        <button
+                            className={`filter-btn ${filter === 'Parent' ? 'active' : ''}`}
+                            onClick={() => setFilter('Parent')}
+                        >
+                            Parents
+                        </button>
+                        <button
+                            className={`filter-btn ${filter === 'Teacher' ? 'active' : ''}`}
+                            onClick={() => setFilter('Teacher')}
+                        >
+                            Teachers
+                        </button>
                     </div>
 
                     <div className="conversations-list">
@@ -68,7 +109,7 @@ export default function Chat() {
                                 onClick={() => setActiveConversation(conv.id)}
                             >
                                 <div className="conversation-avatar">
-                                    {conv.userName.split(' ').map(n => n[0]).join('')}
+                                    {conv.userName.charAt(0)}
                                     {conv.online && <span className="online-dot"></span>}
                                 </div>
                                 <div className="conversation-details">
@@ -92,18 +133,18 @@ export default function Chat() {
                         <>
                             <div className="chat-header">
                                 <div className="chat-header-info">
-                                    <div className="conversation-avatar">
-                                        {currentConversation.userName.split(' ').map(n => n[0]).join('')}
-                                        {currentConversation.online && <span className="online-dot"></span>}
+                                    <div className="conversation-avatar" style={{ width: '40px', height: '40px' }}>
+                                        {currentConversation.userName.charAt(0)}
                                     </div>
                                     <div>
                                         <h4>{currentConversation.userName}</h4>
                                         <p>{currentConversation.userType} • {currentConversation.online ? 'Online' : 'Offline'}</p>
                                     </div>
                                 </div>
-                                <button className="icon-btn" style={{ width: '40px', height: '40px' }}>
-                                    <MoreVertical size={20} />
-                                </button>
+                                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                    <button className="icon-btn"><Search size={20} /></button>
+                                    <button className="icon-btn"><MoreVertical size={20} /></button>
+                                </div>
                             </div>
 
                             <div className="chat-messages">
@@ -118,6 +159,7 @@ export default function Chat() {
                                         </div>
                                     </div>
                                 ))}
+                                <div ref={messagesEndRef} />
                             </div>
 
                             <div className="chat-input-area">
@@ -145,6 +187,9 @@ export default function Chat() {
                         </>
                     ) : (
                         <div className="chat-empty">
+                            <div style={{ background: '#F3F4FF', padding: '2rem', borderRadius: '50%', marginBottom: '1rem' }}>
+                                <Send size={48} color="var(--primary-color)" />
+                            </div>
                             <h3>Select a conversation</h3>
                             <p>Choose a conversation from the list to start messaging</p>
                         </div>

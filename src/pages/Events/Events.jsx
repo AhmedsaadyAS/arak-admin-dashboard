@@ -1,11 +1,25 @@
 import React, { useState } from 'react';
 import { Calendar as CalendarIcon, Clock, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
 import { eventsData } from '../../mock/events';
+import EventForm from './EventForm';
 import '../../styles/layout.css';
 import '../Dashboard/dashboard.css';
 
 export default function Events() {
     const [currentDate, setCurrentDate] = useState(new Date());
+    const [events, setEvents] = useState(eventsData);
+    const [isAddingEvent, setIsAddingEvent] = useState(false);
+
+    const handleSaveEvent = (eventData) => {
+        const newEvent = {
+            id: Date.now(),
+            ...eventData,
+            color: '#4D44B5', // Default color
+            bgColor: '#F3F4FF'
+        };
+        setEvents([...events, newEvent]);
+        setIsAddingEvent(false);
+    };
 
     // Simple calendar generation logic
     const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
@@ -23,13 +37,18 @@ export default function Events() {
         "July", "August", "September", "October", "November", "December"
     ];
 
+    if (isAddingEvent) {
+        return <EventForm onClose={() => setIsAddingEvent(false)} onSave={handleSaveEvent} />;
+    }
+
     return (
         <div className="dashboard-page">
             <div className="card-header">
                 <h3>Events</h3>
                 <div className="topbar-actions">
-                    <button className="icon-btn" onClick={() => alert('Add Event modal would open here')}>
+                    <button className="icon-btn" onClick={() => setIsAddingEvent(true)} style={{ width: 'auto', padding: '0 1rem', borderRadius: '40px', background: 'var(--primary-color)', color: 'white', gap: '0.5rem' }}>
                         <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>+</span>
+                        <span>Add Event</span>
                     </button>
                 </div>
             </div>
@@ -114,7 +133,7 @@ export default function Events() {
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxHeight: '500px', overflowY: 'auto' }}>
-                        {eventsData.map(event => (
+                        {events.map(event => (
                             <div key={event.id} style={{
                                 background: event.bgColor,
                                 padding: '1rem',

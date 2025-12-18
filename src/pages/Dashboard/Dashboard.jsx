@@ -1,6 +1,8 @@
 import React from 'react';
 import { Users, GraduationCap, Calendar, MessageCircle } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { studentsData } from '../../mock/students';
+import { getHighRiskStudents } from '../../utils/aiInsights';
 import './dashboard.css';
 
 const performanceData = [
@@ -19,6 +21,8 @@ const performanceData = [
 ];
 
 export default function Dashboard() {
+  const highRiskStudents = getHighRiskStudents(studentsData).slice(0, 5); // Show top 5
+
   return (
     <div className="dashboard-page">
       {/* Stats Row */}
@@ -97,22 +101,32 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="chart-card school-calendar">
+        <div className="chart-card high-risk-students">
           <div className="card-header">
-            <h3>School Calendar</h3>
+            <h3>High Risk Students (AI Insights)</h3>
+            <span className="badge" style={{ background: '#FEECEC', color: '#EE3636' }}>Action Needed</span>
           </div>
-          <div className="calendar-placeholder">
-            {/* Simple Calendar Placeholder for now */}
-            <div style={{ textAlign: 'center', width: '100%' }}>
-              <h4 style={{ marginBottom: '1rem' }}>March 2021</h4>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '5px', fontSize: '0.8rem' }}>
-                <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
-                <span style={{ color: '#ccc' }}>28</span><span style={{ color: '#ccc' }}>29</span><span style={{ color: '#ccc' }}>30</span><span style={{ color: '#ccc' }}>31</span><span>1</span><span>2</span><span>3</span>
-                <span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
-                <span>11</span><span>12</span><span>13</span><span>14</span><span>15</span><span>16</span><span>17</span>
-                <span>18</span><span>19</span><span style={{ background: '#FCC43E', borderRadius: '50%', color: 'white', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>20</span><span>21</span><span>22</span><span>23</span><span>24</span>
-              </div>
-            </div>
+          <div className="risk-list">
+            {highRiskStudents.length > 0 ? (
+              highRiskStudents.map(student => (
+                <div key={student.id} className="risk-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 0', borderBottom: '1px solid #f3f4f6' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#FEECEC', color: '#EE3636', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '0.8rem' }}>
+                      {student.name.split(' ').map(n => n[0]).join('')}
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: '600', fontSize: '0.9rem' }}>{student.name}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#EE3636' }}>{student.mainIssue}</div>
+                    </div>
+                  </div>
+                  <button className="icon-btn" style={{ width: '28px', height: '28px', background: '#f9fafb' }}>
+                    <Users size={14} />
+                  </button>
+                </div>
+              ))
+            ) : (
+              <p style={{ color: '#A098AE', textAlign: 'center', padding: '1rem' }}>No high risk students detected.</p>
+            )}
           </div>
         </div>
       </div>

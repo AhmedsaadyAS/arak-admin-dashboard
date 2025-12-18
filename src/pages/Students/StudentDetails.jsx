@@ -1,25 +1,33 @@
 import React from 'react';
-import { Mail, Phone, MapPin, Calendar, AlertTriangle, TrendingUp } from 'lucide-react';
+import { Mail, Phone, MapPin, Calendar, AlertTriangle, TrendingUp, Clock, BookOpen } from 'lucide-react';
 import { studentsData } from '../../mock/students';
 import { attendanceData, attendanceSummary } from '../../mock/attendance';
-import { scheduleData } from '../../mock/schedule';
-import { gradesData } from '../../mock/grades';
+import { getClassSchedule, formatTime, getDayName } from '../../utils/scheduleUtils';
+import { calculateSubjectGrade, getPerformanceBreakdown, calculateOverallPerformance, assessmentsData } from '../../mock/assessments';
+import { getStudentInsights } from '../../utils/aiInsights';
 import { feesData } from '../../mock/fees';
-import { aiInsightsData } from '../../mock/aiInsights';
+import { subjectsData } from '../../mock/subjects';
 import './StudentDetails.css';
 
 export default function StudentDetails({ studentId, onBack }) {
     const student = studentsData.find(s => s.id === studentId);
-    const attendance = attendanceData[studentId] || [];
-    const summary = attendanceSummary[studentId] || { present: 0, absent: 0, late: 0, total: 0 };
-    const schedule = scheduleData[studentId] || [];
-    const grades = gradesData[studentId] || [];
-    const feeInfo = feesData[studentId] || { totalDue: 0, totalPaid: 0, outstanding: 0, invoices: [] };
-    const aiInsight = aiInsightsData[studentId] || { riskLevel: 'Unknown', riskScore: 0, insights: [], recommendations: [] };
 
     if (!student) {
         return <div className="dashboard-page"><div className="chart-card"><h3>Student not found</h3></div></div>;
     }
+
+    const attendance = attendanceData[studentId] || [];
+    const summary = attendanceSummary[studentId] || { present: 0, absent: 0, late: 0, total: 0 };
+    const feeInfo = feesData[studentId] || { totalDue: 0, totalPaid: 0, outstanding: 0, invoices: [] };
+
+    // New Data Integrations
+    const schedule = getClassSchedule(student.classId);
+    const aiInsight = getStudentInsights(student);
+    const overallPerformance = calculateOverallPerformance(studentId);
+
+    // Get unique subjects for this student
+    const studentAssessments = assessmentsData.filter(a => a.studentId === studentId);
+    const subjectIds = [...new Set(studentAssessments.map(a => a.subjectId))];
 
     const getRiskColor = (level) => {
         switch (level) {
@@ -31,6 +39,7 @@ export default function StudentDetails({ studentId, onBack }) {
     };
 
     const attendancePercent = summary.total > 0 ? ((summary.present / summary.total) * 100).toFixed(1) : 0;
+    const weekDays = [0, 1, 2, 3, 4]; // Sun-Thu
 
     return (
         <div className="dashboard-page">
@@ -80,7 +89,114 @@ export default function StudentDetails({ studentId, onBack }) {
             <div className="student-details-grid">
                 {/* Main Content */}
                 <div className="student-main-content">
-                    {/* Attendance Table */}
+
+                    {/* Academic Performance Section */}
+                    <div className="chart-card">
+                        <div className="card-header">
+                            <h3>Academic Performance</h3>
+                            <div className="performance-badge" style={{
+                                background: overallPerformance >= 80 ? '#E6F9F0' : overallPerformance >= 60 ? '#FFF4E5' : '#FEECEC',
+                                color: overallPerformance >= 80 ? '#00B69B' : overallPerformance >= 60 ? '#FFA756' : '#EE3636',
+                                padding: '0.5rem 1rem',
+                                borderRadius: '20px',
+                                fontWeight: 'bold'
+                            }}>
+                                Overall: {overallPerformance || 'N/A'}%
+                            </div>
+                        </div>
+
+                        <div className="performance-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem', marginTop: '1rem' }}>
+                            {subjectIds.map(subjectId => {
+                                const subject = subjectsData.find(s => s.id === subjectId);
+                                const grade = calculateSubjectGrade(studentId, subjectId);
+                                const breakdown = getPerformanceBreakdown(studentId, subjectId);
+
+                                return (
+                                    <div key={subjectId} style={{ border: '1px solid #E0E0E0', borderRadius: '12px', padding: '1rem' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                <div style={{ width: '10px', height: '10px', borderRadius: '2px', background: subject?.color || '#ccc' }}></div>
+                                                <h4 style={{ margin: 0 }}>{subject?.name}</h4>
+                                            </div>
+                                            <span style={{
+                                                fontWeight: 'bold',
+                                                color: grade >= 80 ? '#00B69B' : grade >= 60 ? '#FFA756' : '#EE3636'
+                                            }}>{grade}%</span>
+                                        </div>
+
+                                        {/* Progress Bars */}
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.85rem' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                <span style={{ color: '#A098AE' }}>Tasks (20%)</span>
+                                                <span>{Math.round(breakdown.tasks.percentage)}%</span>
+                                            </div>
+                                            <div style={{ height: '6px', background: '#F0F0F0', borderRadius: '3px', overflow: 'hidden' }}>
+                                                <div style={{ width: `${breakdown.tasks.percentage}%`, height: '100%', background: '#4D44B5' }}></div>
+                                            </div>
+
+                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                <span style={{ color: '#A098AE' }}>Quizzes (10%)</span>
+                                                <span>{Math.round(breakdown.quizzes.percentage)}%</span>
+                                            </div>
+                                            <div style={{ height: '6px', background: '#F0F0F0', borderRadius: '3px', overflow: 'hidden' }}>
+                                                <div style={{ width: `${breakdown.quizzes.percentage}%`, height: '100%', background: '#FF8C00' }}></div>
+                                            </div>
+
+                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                <span style={{ color: '#A098AE' }}>Midterm (30%)</span>
+                                                <span>{Math.round(breakdown.midterm.percentage)}%</span>
+                                            </div>
+                                            <div style={{ height: '6px', background: '#F0F0F0', borderRadius: '3px', overflow: 'hidden' }}>
+                                                <div style={{ width: `${breakdown.midterm.percentage}%`, height: '100%', background: '#00B69B' }}></div>
+                                            </div>
+
+                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                <span style={{ color: '#A098AE' }}>Final (40%)</span>
+                                                <span>{Math.round(breakdown.final.percentage)}%</span>
+                                            </div>
+                                            <div style={{ height: '6px', background: '#F0F0F0', borderRadius: '3px', overflow: 'hidden' }}>
+                                                <div style={{ width: `${breakdown.final.percentage}%`, height: '100%', background: '#FB7D5B' }}></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Class Schedule */}
+                    <div className="chart-card">
+                        <div className="card-header">
+                            <h3>Class Schedule</h3>
+                        </div>
+                        <div className="schedule-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '1rem', marginTop: '1rem' }}>
+                            {weekDays.map(day => (
+                                <div key={day} style={{ background: '#FAFAFA', borderRadius: '8px', padding: '0.75rem' }}>
+                                    <h5 style={{ textAlign: 'center', color: '#4D44B5', marginBottom: '0.75rem' }}>{getDayName(day)}</h5>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                        {schedule[day]?.map((lesson, idx) => (
+                                            <div key={idx} style={{
+                                                background: 'white',
+                                                padding: '0.5rem',
+                                                borderRadius: '6px',
+                                                borderLeft: `3px solid ${lesson.subjectColor}`,
+                                                boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+                                            }}>
+                                                <div style={{ fontWeight: '600', fontSize: '0.85rem' }}>{lesson.subjectName}</div>
+                                                <div style={{ fontSize: '0.75rem', color: '#A098AE' }}>{formatTime(lesson.startTime)}</div>
+                                                <div style={{ fontSize: '0.75rem', color: '#303972' }}>{lesson.room}</div>
+                                            </div>
+                                        ))}
+                                        {(!schedule[day] || schedule[day].length === 0) && (
+                                            <div style={{ textAlign: 'center', color: '#D0D0D0', fontSize: '0.8rem', padding: '1rem' }}>No classes</div>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Attendance History */}
                     <div className="chart-card">
                         <div className="card-header">
                             <h3>Attendance History</h3>
@@ -94,7 +210,7 @@ export default function StudentDetails({ studentId, onBack }) {
                                 </tr>
                             </thead>
                             <tbody>
-                                {attendance.slice(0, 10).map((record, index) => (
+                                {attendance.slice(0, 5).map((record, index) => (
                                     <tr key={index}>
                                         <td>{record.date}</td>
                                         <td>
@@ -103,35 +219,6 @@ export default function StudentDetails({ studentId, onBack }) {
                                             </span>
                                         </td>
                                         <td>{record.time}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {/* Grades Table */}
-                    <div className="chart-card">
-                        <div className="card-header">
-                            <h3>Academic Performance</h3>
-                        </div>
-                        <table className="simple-table">
-                            <thead>
-                                <tr>
-                                    <th>Subject</th>
-                                    <th>Score</th>
-                                    <th>Grade</th>
-                                    <th>Teacher</th>
-                                    <th>Date</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {grades.map((grade, index) => (
-                                    <tr key={index}>
-                                        <td><strong>{grade.subject}</strong></td>
-                                        <td>{grade.score}%</td>
-                                        <td><span className="badge" style={{ background: grade.score >= 80 ? '#00B69B' : grade.score >= 60 ? '#FFA756' : '#EE3636', color: 'white' }}>{grade.grade}</span></td>
-                                        <td>{grade.teacher}</td>
-                                        <td>{grade.date}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -149,20 +236,22 @@ export default function StudentDetails({ studentId, onBack }) {
                         </div>
                         <div className="risk-level" style={{ color: getRiskColor(aiInsight.riskLevel) }}>
                             <h2>{aiInsight.riskLevel} Risk</h2>
-                            <p>Score: {aiInsight.riskScore}/100</p>
+                            <p>{aiInsight.summary}</p>
                         </div>
                         <div className="risk-insights">
-                            <h4>Key Insights:</h4>
+                            <h4>Risk Factors:</h4>
                             <ul>
-                                {aiInsight.insights.map((insight, i) => (
-                                    <li key={i}>{insight}</li>
+                                {aiInsight.factors.map((factor, i) => (
+                                    <li key={i}>{factor}</li>
                                 ))}
+                                {aiInsight.factors.length === 0 && <li>No significant risk factors detected.</li>}
                             </ul>
                             <h4 style={{ marginTop: '1rem' }}>Recommendations:</h4>
                             <ul>
                                 {aiInsight.recommendations.map((rec, i) => (
                                     <li key={i}>{rec}</li>
                                 ))}
+                                {aiInsight.recommendations.length === 0 && <li>Keep up the good work!</li>}
                             </ul>
                         </div>
                     </div>
@@ -191,25 +280,6 @@ export default function StudentDetails({ studentId, onBack }) {
                                     <span className="stat-label">Late</span>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-
-                    {/* Schedule */}
-                    <div className="chart-card">
-                        <div className="card-header">
-                            <h3>Weekly Schedule</h3>
-                        </div>
-                        <div className="schedule-list">
-                            {schedule.slice(0, 5).map((item, index) => (
-                                <div key={index} className="schedule-item">
-                                    <div className="schedule-day">{item.day}</div>
-                                    <div className="schedule-details">
-                                        <strong>{item.subject}</strong>
-                                        <p>{item.time}</p>
-                                        <p className="schedule-teacher">{item.teacher}</p>
-                                    </div>
-                                </div>
-                            ))}
                         </div>
                     </div>
 
