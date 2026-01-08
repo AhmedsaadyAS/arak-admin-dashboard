@@ -10,21 +10,19 @@ A modern, feature-rich web admin panel for the **Arak School Management System**
 
 ## 📋 Overview
 
-Arak Admin Dashboard is a comprehensive school administration platform that enables administrators to manage students, teachers, events, fees, and parent communications from a single, intuitive interface. Built with React and Vite for optimal performance, the application currently uses mock data while a full-stack backend integration is planned.
+Arak Admin Dashboard is a comprehensive school administration platform that enables administrators to manage students, teachers, events, fees, and parent communications from a single, intuitive interface. 
+
+**Latest Update (v2.0):** The project now features a fully functional **Mock API** using `json-server` and a robust **Service Layer** architecture, simulating a real production backend with full CRUD capabilities, server-side search, and latency simulation.
 
 ### ✨ Key Features
 
 - **📊 Dashboard** — Real-time statistics and charts for student performance, attendance trends, and financial summaries
-- **📈 Reports & Analytics** — Detailed reports for student attendance and grades with export capabilities
-- **👨‍🎓 Student Management** — Comprehensive student profiles with grades, attendance, parent information, and enrollment history
-- **👩‍🏫 Teacher Management** — Teacher profiles, subject assignments, experience tracking, and professional details
-- **📅 Events Calendar** — Manage school events including classes, meetings, field trips, and parties
-- **📅 Schedule Management** — Class scheduling with bulk import functionality
-- **💰 Fees & Invoices** — Invoice generation, payment tracking, and financial reporting with status filters
-- **💬 Chat System** — Real-time messaging with conversation history and filtering
-- **📈 Activity Feed** — Centralized activity log with AI-powered insights for student risk assessment
-- **👥 User & Role Management** — Advanced user administration with role-based permissions for admin and parent users
-- **🤖 AI Insights** — Simple AI risk analysis for student performance and behavior patterns
+- **👨‍🎓 Student Management** — Full CRUD operations, dynamic profiles, grade management, and parent info
+- **👩‍🏫 Teacher Management** — Teacher profiles, class assignments, and schedule tracking
+- **📅 Events & Schedule** — Calendar management for school events and class schedules
+- **💰 Fees Management** — Tracking invoices and payment status
+- **🔍 Advanced Search** — Server-side search and filtering for students and teachers
+- **🤖 AI Insights** — Simulated AI analysis for student risk assessment
 
 ---
 
@@ -32,10 +30,11 @@ Arak Admin Dashboard is a comprehensive school administration platform that enab
 
 - **Frontend Framework:** React 18.3.1
 - **Build Tool:** Vite 5.4.11
+- **Mock Backend:** JSON Server (Simulation of REST API)
+- **Routing:** React Router v6
 - **UI Library:** Lucide React (icons)
 - **Charts:** Recharts 3.5.1
-- **Styling:** Vanilla CSS with custom design system
-- **Data:** Mock data (planned backend: ASP.NET Core + SQL Server)
+- **Styling:** Vanilla CSS with scoped modules
 
 ---
 
@@ -47,26 +46,19 @@ arak-admin/
 ├── src/
 │   ├── components/
 │   │   ├── layout/         # Sidebar, Topbar
-│   │   └── ui/             # Modal, reusable components
+│   │   └── ui/             # Reusable UI components
 │   ├── pages/
 │   │   ├── Dashboard/      # Main dashboard
-│   │   ├── Students/       # Student list & details
-│   │   ├── Teachers/       # Teacher list & details
-│   │   ├── Schedule/       # Class scheduling & upload
-│   │   ├── Events/         # Calendar view
-│   │   ├── Fees/           # Invoice management
-│   │   ├── Reports/        # Analytics & Reporting
-│   │   ├── Chat/           # Messaging interface
-│   │   ├── Activity/       # AI insights & activity log
-│   │   ├── User/           # User & role management
-│   │   └── Settings/       # App settings
-│   ├── mock/               # Mock data (students, teachers, fees, etc.)
-│   ├── styles/             # Global CSS and layout styles
-│   ├── App.jsx             # Main app component
-│   └── main.jsx            # Entry point
-├── index.html
+│   │   ├── Students/       # List & Details (API integrated)
+│   │   ├── Teachers/       # List & Details (API integrated)
+│   │   └── ...             # Other modules
+│   ├── services/
+│   │   └── api.js          # Centralized Service Layer (Fetch Wrapper)
+│   ├── context/            # Global state (RefreshContext)
+│   ├── mock/               # Legacy static mock data (transitioning to API)
+│   └── styles/             # Global CSS
+├── db.json                 # Mock Database (JSON Server)
 ├── package.json
-├── vite.config.js
 └── README.md
 ```
 
@@ -79,7 +71,7 @@ arak-admin/
 - Node.js (v16 or higher)
 - npm or yarn
 
-### Installation
+### Installation & Setup
 
 1. **Clone the repository**
    ```bash
@@ -92,15 +84,25 @@ arak-admin/
    npm install
    ```
 
-3. **Start the development server**
+3. **Start the Mock Server** (Required for data)
+   Open a new terminal and run:
+   ```bash
+   npm run server
+   ```
+   *Runs on http://localhost:5000*
+
+4. **Start the Development App**
+   Open a second terminal and run:
    ```bash
    npm run dev
    ```
+   *Runs on http://localhost:5173*
 
-4. **Open your browser**
-   ```
-   Navigate to http://localhost:5173
-   ```
+5. **Open your browser**
+   Navigate to `http://localhost:5173`
+
+> [!NOTE]
+> You must run **BOTH** the server and the dev command for the application to function correctly.
 
 ### Build for Production
 
@@ -110,24 +112,14 @@ npm run build
 
 The optimized production build will be in the `dist/` folder.
 
-### Preview Production Build
-
-```bash
-npm run preview
-```
-
 ---
 
 ## 🎯 Future Enhancements
 
-- **Backend Integration** — ASP.NET Core API with SQL Server database
-- **Authentication & Authorization** — JWT-based authentication with role-based access control
-- **Real-time Features** — WebSocket integration for live chat and notifications
-- **Advanced AI** — Machine learning models for predictive analytics and student risk assessment
-- **Mobile App** — React Native companion app for parents
-- **Deployment** — Cloud deployment on Azure/AWS with CI/CD pipeline
-- **Localization** — Multi-language support (English, Arabic)
-- **Export Features** — PDF/Excel export for reports and invoices
+- **Real Backend Integration** — Replace `api.js` endpoints with real ASP.NET Core API
+- **Authentication** — Login/Signup screens with JWT
+- **Advanced Reporting** — Export to PDF/Excel
+- **Cloud Deployment** — CI/CD pipelines
 
 ---
 
