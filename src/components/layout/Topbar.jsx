@@ -1,8 +1,13 @@
 import React from "react";
-import { Search, Bell, Settings } from "lucide-react";
+import { Search, Bell, Settings, RefreshCw } from "lucide-react";
+import { Link } from "react-router-dom";
+import ApiStatus from "../common/ApiStatus";
+import { useRefresh } from "../../context/RefreshContext";
 import "../../styles/layout.css";
 
-export default function Topbar({ pageTitle = "Dashboard", onSelect }) {
+export default function Topbar({ pageTitle = "Dashboard" }) {
+  const { triggerRefresh } = useRefresh();
+
   return (
     <header className="topbar">
       <div className="topbar-title">
@@ -16,13 +21,17 @@ export default function Topbar({ pageTitle = "Dashboard", onSelect }) {
         </div>
 
         <div className="action-icons">
+          <ApiStatus />
+          <button className="icon-btn" onClick={triggerRefresh} title="Refresh Data">
+            <RefreshCw size={20} />
+          </button>
           <button className="icon-btn">
             <Bell size={20} />
             <span className="notification-dot"></span>
           </button>
-          <button className="icon-btn" onClick={() => onSelect && onSelect('settings')} title="Settings">
+          <Link to="/settings" className="icon-btn" title="Settings">
             <Settings size={20} />
-          </button>
+          </Link>
         </div>
 
         <div className="user-profile">

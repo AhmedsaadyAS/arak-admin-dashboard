@@ -1,0 +1,261 @@
+{
+    "students": [
+        {
+            "id": 1,
+            "studentId": "#123456789",
+            "name": "Samantha William",
+            "email": "samantha@example.com",
+            "phone": "+62 812 3456 7890",
+            "photo": "SW",
+            "grade": "VII A",
+            "status": "Active",
+            "address": "Jakarta, Indonesia",
+            "parentName": "Mana William",
+            "parentEmail": "mana.william@example.com",
+            "parentPhone": "+62 812 3456 7891",
+            "enrollmentDate": "March 25, 2021",
+            "classId": 1
+        },
+        {
+            "id": 2,
+            "studentId": "#123456790",
+            "name": "Tony Soap",
+            "email": "tony@example.com",
+            "grade": "VII B",
+            "status": "Inactive",
+            "parentName": "James Soap",
+            "joinDate": "2021-03-25",
+            "attendance": 85,
+            "classId": 2
+        },
+        {
+            "id": 3,
+            "studentId": "#123456791",
+            "name": "Karen Hope",
+            "email": "karen@example.com",
+            "grade": "VII A",
+            "status": "Active",
+            "parentName": "Justin Hope",
+            "joinDate": "2021-04-10",
+            "attendance": 92,
+            "classId": 1
+        },
+        {
+            "id": 4,
+            "studentId": "#123456792",
+            "name": "Jordan Nico",
+            "email": "jordan@example.com",
+            "grade": "VII C",
+            "status": "At Risk",
+            "parentName": "Nico Smith",
+            "joinDate": "2021-05-15",
+            "attendance": 65,
+            "classId": 3
+        },
+        {
+            "id": 5,
+            "studentId": "#123456793",
+            "name": "Nadila Adja",
+            "email": "nadila@example.com",
+            "grade": "VII B",
+            "status": "Active",
+            "parentName": "Adja Putra",
+            "joinDate": "2021-06-20",
+            "attendance": 95,
+            "classId": 2
+        },
+        {
+            "id": 6,
+            "studentId": "#123456794",
+            "name": "Johnny Ahmad",
+            "email": "johnny@example.com",
+            "grade": "VII A",
+            "status": "Active",
+            "parentName": "Ahmad Lee",
+            "joinDate": "2021-06-22",
+            "attendance": 88,
+            "classId": 1
+        },
+        {
+            "id": 7,
+            "studentId": "#123456795",
+            "name": "Grace Liu",
+            "email": "grace@example.com",
+            "grade": "VII C",
+            "status": "Active",
+            "parentName": "Liu Wei",
+            "joinDate": "2021-07-01",
+            "attendance": 98,
+            "classId": 3
+        },
+        {
+            "id": 8,
+            "studentId": "#123456796",
+            "name": "Michael Brown",
+            "email": "michael.b@example.com",
+            "grade": "VII B",
+            "status": "At Risk",
+            "parentName": "Sarah Brown",
+            "joinDate": "2021-07-15",
+            "attendance": 70,
+            "classId": 2
+        },
+        {
+            "id": 9,
+            "studentId": "#123456797",
+            "name": "Emily Chen",
+            "email": "emily.c@example.com",
+            "grade": "VII A",
+            "status": "Active",
+            "parentName": "David Chen",
+            "joinDate": "2021-08-01",
+            "attendance": 94,
+            "classId": 1
+        },
+        {
+            "id": 10,
+            "studentId": "#123456798",
+            "name": "Christopher Nolan",
+            "email": "chris.n@example.com",
+            "grade": "VII C",
+            "status": "Active",
+            "parentName": "Emma Nolan",
+            "joinDate": "2021-08-05",
+            "attendance": 90,
+            "classId": 3
+        },
+        {
+            "id": 11,
+            "studentId": "#999999999",
+            "name": "Elizabeth Alexandra Mary Windsor Mountbatten-Windsor the Second of Her Name",
+            "email": "queen@example.com",
+            "grade": "VII A",
+            "status": "Active",
+            "parentName": "King George",
+            "joinDate": "1952-02-06",
+            "attendance": 100,
+            "classId": 1,
+            "note": "Edge case: Very long name"
+        },
+        {
+            "id": 12,
+            "studentId": "#000000001",
+            "name": "Ghost Student",
+            "grade": "VII B",
+            "status": "Inactive",
+            "joinDate": "2022-01-01",
+            "attendance": 0,
+            "classId": 2,
+            "note": "Edge case: Missing optional fields (email, parentName)"
+        }
+    ],
+    "teachers": [
+        {
+            "id": 1,
+            "teacherId": "#T1001",
+            "name": "Maria Historica",
+            "subject": "History",
+            "email": "maria@example.com",
+            "phone": "+62 811 1111 2222",
+            "assignedClasses": [
+                "VII A",
+                "VII B"
+            ],
+            "status": "Active",
+            "about": "Passionate about ancient civilizations.",
+            "education": "PhD in History",
+            "expertise": [
+                "World History",
+                "Ancient Civilizations"
+            ],
+            "dateJoined": "2018-05-15"
+        },
+        {
+            "id": 2,
+            "teacherId": "#T1002",
+            "name": "John Math",
+            "subject": "Mathematics",
+            "email": "john.math@example.com",
+            "phone": "+62 811 3333 4444",
+            "assignedClasses": [
+                "VII A",
+                "VII C",
+                "VIII A"
+            ],
+            "status": "Active",
+            "about": "Math enthusiast with 10 years experience.",
+            "education": "MSc Mathematics",
+            "expertise": [
+                "Algebra",
+                "Calculus"
+            ],
+            "dateJoined": "2019-02-20"
+        },
+        {
+            "id": 3,
+            "teacherId": "#T1003",
+            "name": "Sarah Science",
+            "subject": "Physics",
+            "email": "sarah.sci@example.com",
+            "phone": "+62 811 5555 6666",
+            "assignedClasses": [
+                "VII B",
+                "VIII B"
+            ],
+            "status": "Active",
+            "expertise": [
+                "Quantum Physics",
+                "Mechanics"
+            ]
+        },
+        {
+            "id": 4,
+            "teacherId": "#T1004",
+            "name": "David Art",
+            "subject": "Arts",
+            "email": "david.art@example.com",
+            "phone": "+62 811 7777 8888",
+            "assignedClasses": [
+                "VII A",
+                "VII B",
+                "VII C"
+            ],
+            "status": "Active"
+        },
+        {
+            "id": 5,
+            "teacherId": "#T1005",
+            "name": "Emily English",
+            "subject": "English",
+            "email": "emily.eng@example.com",
+            "phone": "+62 811 9999 0000",
+            "assignedClasses": [
+                "VII A"
+            ],
+            "status": "On Leave"
+        }
+    ],
+    "events": [],
+    "fees": [],
+    "metrics": {
+        "totalStudents": 932,
+        "totalTeachers": 754,
+        "events": 40,
+        "messages": 32,
+        "systemHealth": "Good",
+        "serverUptime": "99.98%",
+        "activeUsers": 124,
+        "recentAlerts": [
+            {
+                "id": 1,
+                "type": "warning",
+                "message": "High server load detected at 10 AM"
+            },
+            {
+                "id": 2,
+                "type": "info",
+                "message": "Scheduled maintenance on Sunday"
+            }
+        ]
+    }
+}

@@ -1,6 +1,7 @@
-import React from 'react';
-import { Mail, Phone, MapPin, Calendar, AlertTriangle, TrendingUp, Clock, BookOpen } from 'lucide-react';
-import { studentsData } from '../../mock/students';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Mail, Phone, MapPin, Calendar, AlertTriangle } from 'lucide-react';
+import { api } from '../../services/api';
 import { attendanceData, attendanceSummary } from '../../mock/attendance';
 import { getClassSchedule, formatTime, getDayName } from '../../utils/scheduleUtils';
 import { calculateSubjectGrade, getPerformanceBreakdown, calculateOverallPerformance, assessmentsData } from '../../mock/assessments';
@@ -9,24 +10,55 @@ import { feesData } from '../../mock/fees';
 import { subjectsData } from '../../mock/subjects';
 import './StudentDetails.css';
 
-export default function StudentDetails({ studentId, onBack }) {
-    const student = studentsData.find(s => s.id === studentId);
+export default function StudentDetails() {
+    const { id } = useParams();
+    const navigate = useNavigate();
+    const [student, setStudent] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-    if (!student) {
-        return <div className="dashboard-page"><div className="chart-card"><h3>Student not found</h3></div></div>;
+    useEffect(() => {
+        const fetchStudent = async () => {
+            try {
+                const data = await api.getStudentById(id);
+                setStudent(data);
+            } catch (error) {
+                console.error("Failed to fetch student:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchStudent();
+    }, [id]);
+
+    if (loading) {
+        return <div className="dashboard-page" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>Reading student data...</div>;
     }
 
-    const attendance = attendanceData[studentId] || [];
-    const summary = attendanceSummary[studentId] || { present: 0, absent: 0, late: 0, total: 0 };
-    const feeInfo = feesData[studentId] || { totalDue: 0, totalPaid: 0, outstanding: 0, invoices: [] };
+    if (!student) {
+        return (
+            <div className="dashboard-page">
+                <button onClick={() => navigate('/students')} className="back-button">← Back to Students</button>
+                <div className="chart-card"><h3>Student not found</h3></div>
+            </div>
+        );
+    }
+
+    // Convert string ID to number for mock data lookups if necessary, or keep as string if mock data uses strings
+    // The current mock files likely use numbers, so we might need parseInt(id)
+    const studentIdNum = parseInt(id);
+
+    const attendance = attendanceData[studentIdNum] || [];
+    const summary = attendanceSummary[studentIdNum] || { present: 0, absent: 0, late: 0, total: 0 };
+    const feeInfo = feesData[studentIdNum] || { totalDue: 0, totalPaid: 0, outstanding: 0, invoices: [] };
 
     // New Data Integrations
-    const schedule = getClassSchedule(student.classId);
+    // Use optional chaining or defaults in case mock data doesn't match new API structure perfectly
+    const schedule = getClassSchedule(student.classId || 1);
     const aiInsight = getStudentInsights(student);
-    const overallPerformance = calculateOverallPerformance(studentId);
+    const overallPerformance = calculateOverallPerformance(studentIdNum);
 
     // Get unique subjects for this student
-    const studentAssessments = assessmentsData.filter(a => a.studentId === studentId);
+    const studentAssessments = assessmentsData.filter(a => a.studentId === studentIdNum);
     const subjectIds = [...new Set(studentAssessments.map(a => a.subjectId))];
 
     const getRiskColor = (level) => {
@@ -43,7 +75,7 @@ export default function StudentDetails({ studentId, onBack }) {
 
     return (
         <div className="dashboard-page">
-            <button onClick={onBack} className="back-button">← Back to Students</button>
+            <button onClick={() => navigate('/students')} className="back-button">← Back to Students</button>
 
             {/* Header Card */}
             <div className="student-header-card">
@@ -108,8 +140,8 @@ export default function StudentDetails({ studentId, onBack }) {
                         <div className="performance-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem', marginTop: '1rem' }}>
                             {subjectIds.map(subjectId => {
                                 const subject = subjectsData.find(s => s.id === subjectId);
-                                const grade = calculateSubjectGrade(studentId, subjectId);
-                                const breakdown = getPerformanceBreakdown(studentId, subjectId);
+                                const grade = calculateSubjectGrade(studentIdNum, subjectId);
+                                const breakdown = getPerformanceBreakdown(studentIdNum, subjectId);
 
                                 return (
                                     <div key={subjectId} style={{ border: '1px solid #E0E0E0', borderRadius: '12px', padding: '1rem' }}>

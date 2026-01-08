@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { RefreshProvider } from "./context/RefreshContext";
 import Sidebar from "./components/layout/Sidebar";
 import Topbar from "./components/layout/Topbar";
 import Dashboard from "./pages/Dashboard/Dashboard";
@@ -15,82 +17,119 @@ import UserManagement from "./pages/User/UserManagement";
 import UserProfile from "./pages/User/UserProfile";
 import Settings from "./pages/Settings/Settings";
 import Schedule from "./pages/Schedule/Schedule";
+import ErrorBoundary from "./components/common/ErrorBoundary";
 import "./styles/global.css";
 import "./styles/layout.css";
 
-export default function App() {
-    const [active, setActive] = useState("dashboard");
-    const [selectedStudentId, setSelectedStudentId] = useState(null);
-    const [selectedTeacherId, setSelectedTeacherId] = useState(null);
-
-    const pageTitles = {
-        dashboard: "Dashboard",
-        students: "Students",
-        teachers: "Teachers",
-        schedule: "Schedule",
-        events: "Events",
-        fees: "Fees & Invoices",
-        reports: "Reports & Analytics",
-        activity: "AI Analyser & Activity",
-        user: "User Management",
-        profile: "User Profile",
-        settings: "Settings",
-        chat: "Chat"
-    };
-
-    let content = null;
-    switch (active) {
-        case "dashboard":
-            content = <Dashboard />;
-            break;
-        case "students":
-            content = selectedStudentId
-                ? <StudentDetails studentId={selectedStudentId} onBack={() => setSelectedStudentId(null)} />
-                : <StudentsList onViewDetails={(id) => setSelectedStudentId(id)} />;
-            break;
-        case "teachers":
-            content = selectedTeacherId
-                ? <TeacherDetails teacherId={selectedTeacherId} onBack={() => setSelectedTeacherId(null)} />
-                : <TeachersList onViewDetails={(id) => setSelectedTeacherId(id)} />;
-            break;
-        case "schedule":
-            content = <Schedule />;
-            break;
-        case "events":
-            content = <Events />;
-            break;
-        case "fees":
-            content = <Fees />;
-            break;
-        case "reports":
-            content = <Reports />;
-            break;
-        case "activity":
-            content = <Activity />;
-            break;
-        case "user":
-            content = <UserManagement />;
-            break;
-        case "profile":
-            content = <UserProfile />;
-            break;
-        case "settings":
-            content = <Settings />;
-            break;
-        case "chat":
-            content = <Chat />;
-            break;
-        default:
-            content = <Dashboard />;
-    }
-
+const Layout = ({ children, title }) => {
     return (
         <div className="app-shell">
-            <Sidebar active={active} onSelect={setActive} />
+            <Sidebar />
             <main className="app-main">
-                <Topbar pageTitle={pageTitles[active] || "Dashboard"} onSelect={setActive} />
-                <div className="app-content">{content}</div>
+                <Topbar pageTitle={title} />
+                <ErrorBoundary>
+                    <div className="app-content">{children}</div>
+                </ErrorBoundary>
             </main>
         </div>
+    );
+};
+
+export default function App() {
+    return (
+        <RefreshProvider>
+            <Router>
+                <Routes>
+                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+                    <Route path="/dashboard" element={
+                        <Layout title="Dashboard">
+                            <Dashboard />
+                        </Layout>
+                    } />
+
+                    <Route path="/students" element={
+                        <Layout title="Students">
+                            <StudentsList />
+                        </Layout>
+                    } />
+
+                    <Route path="/students/:id" element={
+                        <Layout title="Student Details">
+                            <StudentDetails />
+                        </Layout>
+                    } />
+
+                    <Route path="/teachers" element={
+                        <Layout title="Teachers">
+                            <TeachersList />
+                        </Layout>
+                    } />
+
+                    <Route path="/teachers/:id" element={
+                        <Layout title="Teacher Details">
+                            <TeacherDetails />
+                        </Layout>
+                    } />
+
+                    <Route path="/schedule" element={
+                        <Layout title="Schedule">
+                            <Schedule />
+                        </Layout>
+                    } />
+
+                    <Route path="/events" element={
+                        <Layout title="Events">
+                            <Events />
+                        </Layout>
+                    } />
+
+                    <Route path="/fees" element={
+                        <Layout title="Fees & Invoices">
+                            <Fees />
+                        </Layout>
+                    } />
+
+                    <Route path="/reports" element={
+                        <Layout title="Reports & Analytics">
+                            <Reports />
+                        </Layout>
+                    } />
+
+                    <Route path="/activity" element={
+                        <Layout title="AI Analyser & Activity">
+                            <Activity />
+                        </Layout>
+                    } />
+
+                    <Route path="/user" element={
+                        <Layout title="User Management">
+                            <UserManagement />
+                        </Layout>
+                    } />
+
+                    <Route path="/profile" element={
+                        <Layout title="User Profile">
+                            <UserProfile />
+                        </Layout>
+                    } />
+
+                    <Route path="/settings" element={
+                        <Layout title="Settings">
+                            <Settings />
+                        </Layout>
+                    } />
+
+                    <Route path="/chat" element={
+                        <Layout title="Chat">
+                            <Chat />
+                        </Layout>
+                    } />
+
+                    {/* Fallback route */}
+                    <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                </Routes>
+            </Router>
+        </RefreshProvider>
     );
 }

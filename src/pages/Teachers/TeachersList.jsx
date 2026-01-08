@@ -1,21 +1,50 @@
-import React, { useState, useMemo } from 'react';
-import { Search, Plus, MoreHorizontal, Phone, Mail, Download, Send, Edit2, Trash2 } from 'lucide-react';
-import { teachersData } from '../../mock/teachers';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Search, Plus, Phone, Mail, Download, Send, Edit2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { api } from '../../services/api';
+import { useRefresh } from '../../context/RefreshContext';
+import TableSkeleton from '../../components/common/TableSkeleton';
 import AddEditTeacher from './AddEditTeacher';
-import '../../styles/layout.css';
-import '../Dashboard/dashboard.css';
+import './TeachersList.css';
 
-export default function TeachersList({ onViewDetails }) {
+export default function TeachersList() {
+    const navigate = useNavigate();
+    const { refreshKey } = useRefresh();
+
+    // Filters State
     const [searchTerm, setSearchTerm] = useState('');
     const [subjectFilter, setSubjectFilter] = useState('All');
     const [departmentFilter, setDepartmentFilter] = useState('All');
-    const [teachers, setTeachers] = useState(teachersData);
+
+    // Data State
+    const [teachers, setTeachers] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     // Edit Mode State
     const [isEditing, setIsEditing] = useState(false);
     const [currentTeacher, setCurrentTeacher] = useState(null);
 
-    // Get unique subjects and departments for filters
+    // Fetch Data
+    useEffect(() => {
+        const fetchTeachers = async () => {
+            try {
+                setLoading(true);
+                const data = await api.getTeachers();
+                setTeachers(data);
+                setError(null);
+            } catch (err) {
+                console.error("Failed to fetch teachers:", err);
+                setError("Failed to load teachers data.");
+            } finally {
+                setTimeout(() => setLoading(false), 300);
+            }
+        };
+
+        fetchTeachers();
+    }, [refreshKey]);
+
+    // Unique Select Options
     const uniqueSubjects = useMemo(() => {
         const subjects = teachers.map(t => t.subject);
         return [...new Set(subjects)].sort();
@@ -26,14 +55,20 @@ export default function TeachersList({ onViewDetails }) {
         return [...new Set(departments)].sort();
     }, [teachers]);
 
-    // Advanced filtering
+    // Filter Logic
     const filteredTeachers = useMemo(() => {
         return teachers.filter(teacher => {
+            const name = teacher.name?.toLowerCase() || '';
+            const subject = teacher.subject?.toLowerCase() || '';
+            const email = teacher.email?.toLowerCase() || '';
+            const teacherId = teacher.teacherId?.toLowerCase() || '';
+            const searchLower = searchTerm.toLowerCase();
+
             const matchesSearch = searchTerm === '' ||
-                teacher.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                teacher.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                teacher.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                (teacher.teacherId && teacher.teacherId.toLowerCase().includes(searchTerm.toLowerCase()));
+                name.includes(searchLower) ||
+                subject.includes(searchLower) ||
+                email.includes(searchLower) ||
+                teacherId.includes(searchLower);
 
             const matchesSubject = subjectFilter === 'All' || teacher.subject === subjectFilter;
             const matchesDepartment = departmentFilter === 'All' || (teacher.department || 'General') === departmentFilter;
@@ -42,6 +77,7 @@ export default function TeachersList({ onViewDetails }) {
         });
     }, [teachers, searchTerm, subjectFilter, departmentFilter]);
 
+    // Handlers
     const handleAddTeacher = () => {
         setCurrentTeacher(null);
         setIsEditing(true);
@@ -55,10 +91,8 @@ export default function TeachersList({ onViewDetails }) {
 
     const handleSaveTeacher = (teacherData) => {
         if (currentTeacher) {
-            // Update existing teacher
             setTeachers(teachers.map(t => t.id === currentTeacher.id ? { ...t, ...teacherData } : t));
         } else {
-            // Add new teacher
             const newTeacher = {
                 id: teachers.length + 1,
                 ...teacherData
@@ -87,6 +121,10 @@ export default function TeachersList({ onViewDetails }) {
         alert(`Composing email to ${filteredTeachers.length} teachers...`);
     };
 
+    const handleViewDetails = (id) => {
+        navigate(`/teachers/${id}`);
+    };
+
     if (isEditing) {
         return (
             <AddEditTeacher
@@ -100,47 +138,32 @@ export default function TeachersList({ onViewDetails }) {
         );
     }
 
-    return (
-        <div className="dashboard-page">
-            <div className="card-header">
-                <h3>Teachers</h3>
-            </div>
+    if (loading) return <TableSkeleton rows={8} />;
+    if (error) return <div className="error-message">{error}</div>;
 
-            {/* Enhanced Filter Bar */}
-            <div style={{
-                display: 'flex',
-                gap: '1rem',
-                marginBottom: '1.5rem',
-                flexWrap: 'wrap',
-                alignItems: 'center',
-                background: 'white',
-                padding: '1rem',
-                borderRadius: '12px',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
-            }}>
-                <div className="search-bar" style={{ flex: 1, minWidth: '250px' }}>
-                    <Search size={20} className="search-icon" style={{ color: '#A098AE' }} />
+    return (
+        <section className="teachers-list-container animate-fade-in">
+            <header className="teachers-header">
+                <h3>Teachers</h3>
+            </header>
+
+            {/* Filter Bar */}
+            <div className="filter-bar">
+                <div className="search-container">
+                    <Search size={20} className="search-icon-absolute" />
                     <input
                         type="text"
-                        placeholder="Search by name, subject, email, or ID..."
+                        className="search-input"
+                        placeholder="Search by name, subject, email..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        style={{ fontSize: '0.95rem' }}
                     />
                 </div>
 
                 <select
+                    className="filter-select"
                     value={subjectFilter}
                     onChange={(e) => setSubjectFilter(e.target.value)}
-                    style={{
-                        padding: '0.75rem 1rem',
-                        border: '1px solid #E0E0E0',
-                        borderRadius: '8px',
-                        background: 'white',
-                        cursor: 'pointer',
-                        color: '#303972',
-                        fontWeight: '500'
-                    }}
                 >
                     <option value="All">All Subjects</option>
                     {uniqueSubjects.map(subject => (
@@ -149,17 +172,9 @@ export default function TeachersList({ onViewDetails }) {
                 </select>
 
                 <select
+                    className="filter-select"
                     value={departmentFilter}
                     onChange={(e) => setDepartmentFilter(e.target.value)}
-                    style={{
-                        padding: '0.75rem 1rem',
-                        border: '1px solid #E0E0E0',
-                        borderRadius: '8px',
-                        background: 'white',
-                        cursor: 'pointer',
-                        color: '#303972',
-                        fontWeight: '500'
-                    }}
                 >
                     <option value="All">All Departments</option>
                     {uniqueDepartments.map(dept => (
@@ -167,98 +182,32 @@ export default function TeachersList({ onViewDetails }) {
                     ))}
                 </select>
 
-                <button
-                    onClick={handleBulkEmail}
-                    style={{
-                        padding: '0.75rem 1.5rem',
-                        border: '1px solid var(--secondary-color)',
-                        background: 'white',
-                        color: 'var(--secondary-color)',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        fontWeight: '600',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        whiteSpace: 'nowrap',
-                        transition: 'all 0.2s'
-                    }}
-                >
+                <button className="action-btn btn-secondary-outline" onClick={handleBulkEmail}>
                     <Send size={18} />
                     Email All
                 </button>
 
-                <button
-                    onClick={handleExport}
-                    style={{
-                        padding: '0.75rem 1.5rem',
-                        border: '1px solid var(--primary-color)',
-                        background: 'white',
-                        color: 'var(--primary-color)',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        fontWeight: '600',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        whiteSpace: 'nowrap',
-                        transition: 'all 0.2s'
-                    }}
-                >
+                <button className="action-btn btn-outline" onClick={handleExport}>
                     <Download size={18} />
                     Export
                 </button>
 
-                <button
-                    onClick={handleAddTeacher}
-                    style={{
-                        padding: '0.75rem 1.5rem',
-                        borderRadius: '8px',
-                        background: 'var(--primary-color)',
-                        color: 'white',
-                        border: 'none',
-                        cursor: 'pointer',
-                        fontWeight: '600',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        whiteSpace: 'nowrap',
-                        boxShadow: '0 4px 10px rgba(77, 68, 181, 0.2)'
-                    }}
-                >
+                <button className="action-btn btn-primary" onClick={handleAddTeacher}>
                     <Plus size={18} />
                     Add Teacher
                 </button>
             </div>
 
             {/* Results Counter */}
-            <div style={{
-                padding: '0 0.5rem',
-                marginBottom: '1rem',
-                fontWeight: '500',
-                color: '#A098AE',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                fontSize: '0.9rem'
-            }}>
-                <span>Showing <strong style={{ color: '#303972' }}>{filteredTeachers.length}</strong> of {teachers.length} teachers</span>
+            <div className="results-counter">
+                <span>Showing <strong>{filteredTeachers.length}</strong> of {teachers.length} teachers</span>
                 {(searchTerm || subjectFilter !== 'All' || departmentFilter !== 'All') && (
                     <button
+                        className="clear-filters-btn"
                         onClick={() => {
                             setSearchTerm('');
                             setSubjectFilter('All');
                             setDepartmentFilter('All');
-                        }}
-                        style={{
-                            padding: '0.4rem 1rem',
-                            border: 'none',
-                            background: 'transparent',
-                            color: '#FB7D5B',
-                            cursor: 'pointer',
-                            fontSize: '0.9rem',
-                            fontWeight: '600',
-                            textDecoration: 'underline'
                         }}
                     >
                         Clear All Filters
@@ -267,182 +216,108 @@ export default function TeachersList({ onViewDetails }) {
             </div>
 
             {/* Teachers Table */}
-            <div className="chart-card" style={{ padding: 0, overflow: 'hidden', border: 'none', boxShadow: 'none', background: 'transparent' }}>
-                <div style={{ overflowX: 'auto' }}>
-                    <table className="simple-table" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 1rem', padding: '0 0.5rem' }}>
-                        <thead>
-                            <tr>
-                                <th style={{ padding: '1rem', color: '#A098AE', fontWeight: '600', textAlign: 'left' }}>ID</th>
-                                <th style={{ padding: '1rem', color: '#A098AE', fontWeight: '600', textAlign: 'left' }}>Name</th>
-                                <th style={{ padding: '1rem', color: '#A098AE', fontWeight: '600', textAlign: 'left' }}>Subject</th>
-                                <th style={{ padding: '1rem', color: '#A098AE', fontWeight: '600', textAlign: 'left' }}>Department</th>
-                                <th style={{ padding: '1rem', color: '#A098AE', fontWeight: '600', textAlign: 'left' }}>Experience</th>
-                                <th style={{ padding: '1rem', color: '#A098AE', fontWeight: '600', textAlign: 'left' }}>City</th>
-                                <th style={{ padding: '1rem', color: '#A098AE', fontWeight: '600', textAlign: 'left' }}>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredTeachers.length > 0 ? (
-                                filteredTeachers.map((teacher) => (
-                                    <tr
-                                        key={teacher.id}
-                                        onClick={() => onViewDetails && onViewDetails(teacher.id)}
-                                        style={{
-                                            cursor: 'pointer',
-                                            background: 'white',
-                                            boxShadow: '0 2px 5px rgba(0,0,0,0.02)',
-                                            transition: 'transform 0.2s, box-shadow 0.2s'
-                                        }}
-                                        className="table-row-hover"
-                                    >
-                                        <td style={{ padding: '1.2rem 1rem', borderRadius: '12px 0 0 12px' }}>
-                                            <span style={{ fontWeight: '700', color: '#303972' }}>
-                                                {teacher.teacherId}
-                                            </span>
-                                        </td>
-                                        <td style={{ padding: '1.2rem 1rem' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                                <div style={{
-                                                    width: '40px',
-                                                    height: '40px',
-                                                    borderRadius: '50%',
-                                                    background: '#FF9F43',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    color: 'white',
-                                                    fontWeight: 'bold'
-                                                }}>
-                                                    {teacher.name.charAt(0)}
-                                                </div>
-                                                <div>
-                                                    <div style={{ fontWeight: '700', color: '#303972' }}>{teacher.name}</div>
-                                                    <div style={{ fontSize: '0.85rem', color: '#A098AE' }}>{teacher.email}</div>
-                                                </div>
+            <div className="table-container">
+                <table className="teachers-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Subject</th>
+                            <th>Department</th>
+                            <th>Experience</th>
+                            <th>City</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {filteredTeachers.length > 0 ? (
+                            filteredTeachers.map((teacher) => (
+                                <tr
+                                    key={teacher.id}
+                                    onClick={() => handleViewDetails(teacher.id)}
+                                    className="teacher-row"
+                                >
+                                    <td>
+                                        <span className="teacher-id">{teacher.teacherId}</span>
+                                    </td>
+                                    <td>
+                                        <div className="teacher-info">
+                                            <div className="teacher-avatar">
+                                                {teacher.name.charAt(0)}
                                             </div>
-                                        </td>
-                                        <td style={{ padding: '1.2rem 1rem' }}>
-                                            <span style={{
-                                                padding: '0.4rem 1rem',
-                                                background: '#FFF4E5',
-                                                color: '#FF8C00',
-                                                borderRadius: '20px',
-                                                fontSize: '0.85rem',
-                                                fontWeight: '600'
-                                            }}>
-                                                {teacher.subject}
-                                            </span>
-                                        </td>
-                                        <td style={{ padding: '1.2rem 1rem', color: '#303972' }}>{teacher.department || 'General'}</td>
-                                        <td style={{ padding: '1.2rem 1rem' }}>
-                                            <span style={{
-                                                padding: '0.4rem 1rem',
-                                                background: '#E8F5E9',
-                                                color: '#00B69B',
-                                                borderRadius: '20px',
-                                                fontSize: '0.85rem',
-                                                fontWeight: '600'
-                                            }}>
-                                                {teacher.experience || '5+'} years
-                                            </span>
-                                        </td>
-                                        <td style={{ padding: '1.2rem 1rem', color: '#303972' }}>{teacher.city}</td>
-                                        <td style={{ padding: '1.2rem 1rem', borderRadius: '0 12px 12px 0' }}>
-                                            <div style={{ display: 'flex', gap: '0.8rem' }}>
-                                                <button
-                                                    className="icon-btn"
-                                                    onClick={(e) => handleCall(teacher.name, e)}
-                                                    title="Call Teacher"
-                                                    style={{
-                                                        width: '36px',
-                                                        height: '36px',
-                                                        borderRadius: '50%',
-                                                        background: '#F3F4FF',
-                                                        color: '#4D44B5'
-                                                    }}
-                                                >
-                                                    <Phone size={18} />
-                                                </button>
-                                                <button
-                                                    className="icon-btn"
-                                                    onClick={(e) => handleEmail(teacher.email, e)}
-                                                    title="Email Teacher"
-                                                    style={{
-                                                        width: '36px',
-                                                        height: '36px',
-                                                        borderRadius: '50%',
-                                                        background: '#F3F4FF',
-                                                        color: '#4D44B5'
-                                                    }}
-                                                >
-                                                    <Mail size={18} />
-                                                </button>
-                                                <button
-                                                    className="icon-btn"
-                                                    onClick={(e) => handleEditTeacher(teacher, e)}
-                                                    title="Edit Teacher"
-                                                    style={{
-                                                        width: '36px',
-                                                        height: '36px',
-                                                        borderRadius: '50%',
-                                                        background: '#F3F4FF',
-                                                        color: '#4D44B5'
-                                                    }}
-                                                >
-                                                    <Edit2 size={18} />
-                                                </button>
+                                            <div className="teacher-details">
+                                                <h4>{teacher.name}</h4>
+                                                <span>{teacher.email}</span>
                                             </div>
-                                        </td>
-                                    </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan="8" style={{ textAlign: 'center', padding: '4rem 2rem' }}>
-                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-                                            <div style={{
-                                                width: '60px',
-                                                height: '60px',
-                                                background: '#F3F4FF',
-                                                borderRadius: '50%',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                color: '#4D44B5'
-                                            }}>
-                                                <Search size={30} />
-                                            </div>
-                                            <h3 style={{ margin: 0, color: '#303972' }}>No Teachers Found</h3>
-                                            <p style={{ margin: 0, color: '#A098AE' }}>
-                                                We couldn't find any teachers matching your search.
-                                                <br />Try adjusting your filters or search terms.
-                                            </p>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span className="subject-badge">{teacher.subject}</span>
+                                    </td>
+                                    <td style={{ color: '#303972' }}>{teacher.department || 'General'}</td>
+                                    <td>
+                                        <span className="grade-badge" style={{ background: '#E8F5E9', color: '#00B69B' }}>
+                                            {teacher.experience ? `${teacher.experience} years` : 'N/A'}
+                                        </span>
+                                    </td>
+                                    <td style={{ color: '#303972' }}>{teacher.city}</td>
+                                    <td>
+                                        <div className="action-buttons">
                                             <button
-                                                onClick={() => {
-                                                    setSearchTerm('');
-                                                    setSubjectFilter('All');
-                                                    setDepartmentFilter('All');
-                                                }}
-                                                style={{
-                                                    marginTop: '0.5rem',
-                                                    padding: '0.6rem 1.5rem',
-                                                    background: '#4D44B5',
-                                                    color: 'white',
-                                                    border: 'none',
-                                                    borderRadius: '8px',
-                                                    cursor: 'pointer',
-                                                    fontWeight: '600'
-                                                }}
+                                                className="icon-btn-sm"
+                                                onClick={(e) => handleCall(teacher.name, e)}
+                                                title="Call Teacher"
                                             >
-                                                Clear Filters
+                                                <Phone size={18} />
+                                            </button>
+                                            <button
+                                                className="icon-btn-sm"
+                                                onClick={(e) => handleEmail(teacher.email, e)}
+                                                title="Email Teacher"
+                                            >
+                                                <Mail size={18} />
+                                            </button>
+                                            <button
+                                                className="icon-btn-sm"
+                                                onClick={(e) => handleEditTeacher(teacher, e)}
+                                                title="Edit Teacher"
+                                            >
+                                                <Edit2 size={18} />
                                             </button>
                                         </div>
                                     </td>
                                 </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan="7">
+                                    <div className="empty-state">
+                                        <div className="empty-icon">
+                                            <Search size={30} />
+                                        </div>
+                                        <h3>No Teachers Found</h3>
+                                        <p>
+                                            We couldn't find any teachers matching your search.
+                                            <br />Try adjusting your filters or search terms.
+                                        </p>
+                                        <button
+                                            className="action-btn btn-primary"
+                                            style={{ marginTop: '0.5rem', width: 'auto' }}
+                                            onClick={() => {
+                                                setSearchTerm('');
+                                                setSubjectFilter('All');
+                                                setDepartmentFilter('All');
+                                            }}
+                                        >
+                                            Clear Filters
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
             </div>
-        </div>
+        </section>
     );
 }
