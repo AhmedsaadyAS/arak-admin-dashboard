@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { Search, Plus, Phone, Mail, Download, Edit2 } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Search, Plus, Phone, Mail, Download, Edit2, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../services/api';
 import { useRefresh } from '../../context/RefreshContext';
@@ -7,75 +7,88 @@ import TableSkeleton from '../../components/common/TableSkeleton';
 import AddEditStudent from './AddEditStudent';
 import './StudentsList.css';
 
+const ITEMS_PER_PAGE = 5;
+
 export default function StudentsList() {
     const navigate = useNavigate();
     const { refreshKey } = useRefresh();
 
     // Search & Filter State
+    // We use a separate state for the debounced/active search term to prevent rapid API calls
     const [searchTerm, setSearchTerm] = useState('');
     const [gradeFilter, setGradeFilter] = useState('All');
     const [statusFilter, setStatusFilter] = useState('All');
-    const [genderFilter, setGenderFilter] = useState('All');
 
     // Data State
     const [students, setStudents] = useState([]);
+    const [page, setPage] = useState(1);
+    const [totalStudents, setTotalStudents] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
     const [error, setError] = useState(null);
 
     // Edit Mode State
     const [isEditing, setIsEditing] = useState(false);
     const [currentStudent, setCurrentStudent] = useState(null);
 
-    // Fetch Data
-    useEffect(() => {
-        const fetchStudents = async () => {
-            try {
+    /**
+     * Fetch Students from API
+     * Handles both initial load (page 1) and "Load More" (page > 1)
+     */
+    const fetchStudents = useCallback(async (isLoadMore = false) => {
+        try {
+            if (isLoadMore) {
+                setLoadingMore(true);
+            } else {
                 setLoading(true);
-                const data = await api.getStudents();
-                setStudents(data);
-                setError(null);
-            } catch (err) {
-                console.error("Failed to fetch students:", err);
-                setError("Failed to load students data.");
-            } finally {
-                // Add a small delay for smoother transition/skeleton visibility
-                setTimeout(() => setLoading(false), 300);
             }
-        };
 
-        fetchStudents();
-    }, [refreshKey]);
+            const params = {
+                _page: isLoadMore ? page + 1 : 1, // Calculate next page if loading more
+                _limit: ITEMS_PER_PAGE,
+            };
 
-    // Get unique grades for filter
-    const uniqueGrades = useMemo(() => {
-        const grades = students.map(s => s.grade);
-        return [...new Set(grades)].sort();
-    }, [students]);
+            // Apply Filters to API Params
+            if (searchTerm) params.q = searchTerm;
+            if (gradeFilter !== 'All') params.grade = gradeFilter;
+            // JSON Server expects 'Active'/'Inactive' matching the string in db
+            if (statusFilter !== 'All') params.status = statusFilter;
 
-    // Advanced filtering
-    const filteredStudents = useMemo(() => {
-        return students.filter(student => {
-            const name = student.name?.toLowerCase() || '';
-            const email = student.email?.toLowerCase() || '';
-            const parentName = student.parentName?.toLowerCase() || '';
-            const studentId = student.studentId?.toLowerCase() || '';
-            const searchLower = searchTerm.toLowerCase();
+            // Make the Request
+            const { data, total } = await api.getStudents(params);
 
-            const matchesSearch = searchTerm === '' ||
-                name.includes(searchLower) ||
-                email.includes(searchLower) ||
-                parentName.includes(searchLower) ||
-                studentId.includes(searchLower);
+            if (isLoadMore) {
+                setStudents(prev => [...prev, ...data]);
+                setPage(prev => prev + 1);
+            } else {
+                setStudents(data);
+                setPage(1);
+            }
 
-            const matchesGrade = gradeFilter === 'All' || student.grade === gradeFilter;
-            const matchesStatus = statusFilter === 'All' ||
-                (statusFilter === 'Active' && !student.inactive) ||
-                (statusFilter === 'Inactive' && student.inactive);
-            const matchesGender = genderFilter === 'All' || student.gender === genderFilter;
+            setTotalStudents(total);
+            setError(null);
+        } catch (err) {
+            console.error("Failed to fetch students:", err);
+            setError("Failed to load students data.");
+        } finally {
+            setLoading(false);
+            setLoadingMore(false);
+        }
+    }, [page, searchTerm, gradeFilter, statusFilter]);
 
-            return matchesSearch && matchesGrade && matchesStatus && matchesGender;
-        });
-    }, [students, searchTerm, gradeFilter, statusFilter, genderFilter]);
+    // Initial Load & Filter Changes
+    // When filters change, we reset to Page 1
+    useEffect(() => {
+        // Debounce search a tiny bit or just run effect
+        const timer = setTimeout(() => {
+            fetchStudents(false);
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [searchTerm, gradeFilter, statusFilter, refreshKey]);
+
+    const handleLoadMore = () => {
+        fetchStudents(true);
+    };
 
     const handleAddStudent = () => {
         setCurrentStudent(null);
@@ -88,19 +101,19 @@ export default function StudentsList() {
         setIsEditing(true);
     };
 
-    const handleSaveStudent = (studentData) => {
-        if (currentStudent) {
-            setStudents(students.map(s => s.id === currentStudent.id ? { ...s, ...studentData } : s));
-        } else {
-            const newStudent = {
-                id: students.length + 1,
-                enrollmentDate: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-                ...studentData
-            };
-            setStudents([newStudent, ...students]);
+    const handleSaveStudent = async (studentData) => {
+        try {
+            if (currentStudent) {
+                await api.updateStudent(currentStudent.id, studentData);
+            } else {
+                await api.createStudent(studentData);
+            }
+            setIsEditing(false);
+            setCurrentStudent(null);
+            fetchStudents(false); // Reload list
+        } catch (err) {
+            alert("Failed to save student");
         }
-        setIsEditing(false);
-        setCurrentStudent(null);
     };
 
     const handleCall = (studentName, e) => {
@@ -114,7 +127,7 @@ export default function StudentsList() {
     };
 
     const handleExport = () => {
-        alert(`Exporting ${filteredStudents.length} students to CSV...`);
+        alert(`Exporting ${totalStudents} students to CSV...`);
     };
 
     const handleViewDetails = (id) => {
@@ -134,8 +147,7 @@ export default function StudentsList() {
         );
     }
 
-    if (loading) return <TableSkeleton rows={8} />;
-    if (error) return <div className="error-message">{error}</div>;
+    const hasMore = students.length < totalStudents;
 
     return (
         <section className="students-list-container animate-fade-in">
@@ -150,7 +162,7 @@ export default function StudentsList() {
                     <input
                         type="text"
                         className="search-input"
-                        placeholder="Search by name, email, parent..."
+                        placeholder="Search by name, email..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -162,19 +174,9 @@ export default function StudentsList() {
                     onChange={(e) => setGradeFilter(e.target.value)}
                 >
                     <option value="All">All Grades</option>
-                    {uniqueGrades.map(grade => (
-                        <option key={grade} value={grade}>{grade}</option>
-                    ))}
-                </select>
-
-                <select
-                    className="filter-select"
-                    value={genderFilter}
-                    onChange={(e) => setGenderFilter(e.target.value)}
-                >
-                    <option value="All">All Genders</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
+                    <option value="VII A">VII A</option>
+                    <option value="VII B">VII B</option>
+                    <option value="VII C">VII C</option>
                 </select>
 
                 <select
@@ -198,124 +200,123 @@ export default function StudentsList() {
                 </button>
             </div>
 
-            {/* Results Counter */}
+            {/* Results Counter & Stats */}
             <div className="results-counter">
-                <span>Showing <strong>{filteredStudents.length}</strong> of {students.length} students</span>
-                {(searchTerm || gradeFilter !== 'All' || genderFilter !== 'All' || statusFilter !== 'All') && (
-                    <button
-                        className="clear-filters-btn"
-                        onClick={() => {
-                            setSearchTerm('');
-                            setGradeFilter('All');
-                            setGenderFilter('All');
-                            setStatusFilter('All');
-                        }}
-                    >
-                        Clear All Filters
-                    </button>
-                )}
+                <span>Showing <strong>{students.length}</strong> of <strong>{totalStudents}</strong> students</span>
             </div>
 
-            {/* Students Table */}
-            <div className="table-container">
-                <table className="students-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>Parent</th>
-                            <th>Grade</th>
-                            <th>Gender</th>
-                            <th>City</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filteredStudents.length > 0 ? (
-                            filteredStudents.map((student) => (
-                                <tr
-                                    key={student.id}
-                                    onClick={() => handleViewDetails(student.id)}
-                                    className="student-row"
-                                >
-                                    <td>
-                                        <span className="student-id">{student.studentId}</span>
-                                    </td>
-                                    <td>
-                                        <div className="student-info">
-                                            <div className="student-avatar">
-                                                {student.name.charAt(0)}
+            {/* Table or Loading */}
+            {loading && students.length === 0 ? (
+                <TableSkeleton rows={ITEMS_PER_PAGE} />
+            ) : error ? (
+                <div className="error-message">{error}</div>
+            ) : (
+                <div className="table-container">
+                    <table className="students-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Parent</th>
+                                <th>Grade</th>
+                                <th>City</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {students.length > 0 ? (
+                                students.map((student) => (
+                                    <tr
+                                        key={student.id}
+                                        onClick={() => handleViewDetails(student.id)}
+                                        className="student-row"
+                                    >
+                                        <td>
+                                            <span className="student-id">{student.studentId}</span>
+                                        </td>
+                                        <td>
+                                            <div className="student-info">
+                                                <div className="student-avatar">
+                                                    {student.name.charAt(0)}
+                                                </div>
+                                                <div className="student-details">
+                                                    <h4>{student.name}</h4>
+                                                    <span>{student.email}</span>
+                                                </div>
                                             </div>
-                                            <div className="student-details">
-                                                <h4>{student.name}</h4>
-                                                <span>{student.email}</span>
+                                        </td>
+                                        <td style={{ color: '#303972', fontWeight: '500' }}>{student.parentName}</td>
+                                        <td>
+                                            <span className="grade-badge">{student.grade}</span>
+                                        </td>
+                                        <td style={{ color: '#303972' }}>{student.address?.split(',')[0]}</td>
+                                        <td>
+                                            <div className="action-buttons">
+                                                <button
+                                                    className="icon-btn-sm"
+                                                    onClick={(e) => handleCall(student.name, e)}
+                                                    title="Call Parent"
+                                                >
+                                                    <Phone size={18} />
+                                                </button>
+                                                <button
+                                                    className="icon-btn-sm"
+                                                    onClick={(e) => handleEmail(student.name, e)}
+                                                    title="Email Parent"
+                                                >
+                                                    <Mail size={18} />
+                                                </button>
+                                                <button
+                                                    className="icon-btn-sm"
+                                                    onClick={(e) => handleEditStudent(student, e)}
+                                                    title="Edit Student"
+                                                >
+                                                    <Edit2 size={18} />
+                                                </button>
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td style={{ color: '#303972', fontWeight: '500' }}>{student.parentName}</td>
-                                    <td>
-                                        <span className="grade-badge">{student.grade}</span>
-                                    </td>
-                                    <td style={{ color: '#303972' }}>{student.gender}</td>
-                                    <td style={{ color: '#303972' }}>{student.city}</td>
-                                    <td>
-                                        <div className="action-buttons">
-                                            <button
-                                                className="icon-btn-sm"
-                                                onClick={(e) => handleCall(student.name, e)}
-                                                title="Call Parent"
-                                            >
-                                                <Phone size={18} />
-                                            </button>
-                                            <button
-                                                className="icon-btn-sm"
-                                                onClick={(e) => handleEmail(student.name, e)}
-                                                title="Email Parent"
-                                            >
-                                                <Mail size={18} />
-                                            </button>
-                                            <button
-                                                className="icon-btn-sm"
-                                                onClick={(e) => handleEditStudent(student, e)}
-                                                title="Edit Student"
-                                            >
-                                                <Edit2 size={18} />
-                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan="6">
+                                        <div className="empty-state">
+                                            <div className="empty-icon">
+                                                <Search size={30} />
+                                            </div>
+                                            <h3>No Students Found</h3>
+                                            <p>Try adjusting your filters or search terms.</p>
                                         </div>
                                     </td>
                                 </tr>
-                            ))
-                        ) : (
-                            <tr>
-                                <td colSpan="7">
-                                    <div className="empty-state">
-                                        <div className="empty-icon">
-                                            <Search size={30} />
-                                        </div>
-                                        <h3>No Students Found</h3>
-                                        <p>
-                                            We couldn't find any students matching your search.
-                                            <br />Try adjusting your filters or search terms.
-                                        </p>
-                                        <button
-                                            className="action-btn btn-primary"
-                                            style={{ marginTop: '0.5rem', width: 'auto' }}
-                                            onClick={() => {
-                                                setSearchTerm('');
-                                                setGradeFilter('All');
-                                                setGenderFilter('All');
-                                                setStatusFilter('All');
-                                            }}
-                                        >
-                                            Clear Filters
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
+                            )}
+                        </tbody>
+                    </table>
+
+                    {/* Load More Button */}
+                    {hasMore && (
+                        <div className="flex justify-center p-6">
+                            <button
+                                onClick={handleLoadMore}
+                                disabled={loadingMore}
+                                className="flex items-center gap-2 px-6 py-2.5 bg-white border border-[#4D44B5] text-[#4D44B5] rounded-full font-semibold hover:bg-indigo-50 transition-all disabled:opacity-50"
+                            >
+                                {loadingMore ? (
+                                    <>
+                                        <div className="w-4 h-4 border-2 border-[#4D44B5] border-t-transparent rounded-full animate-spin"></div>
+                                        Loading...
+                                    </>
+                                ) : (
+                                    <>
+                                        <ChevronDown size={20} />
+                                        Load More Students
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
         </section>
     );
 }

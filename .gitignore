@@ -44,3 +44,7 @@ coverage/
 .cache/
 temp/
 tmp/
+
+# Documentation
+srs/
+SRS_GAP_ANALYSIS.md

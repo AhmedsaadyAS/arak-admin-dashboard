@@ -1,0 +1,143 @@
+.data-table-container {
+    overflow-x: auto;
+    border-radius: 12px;
+    background: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.data-table thead {
+    background: #F8F9FA;
+    border-bottom: 2px solid #E5E7EB;
+}
+
+.data-table th {
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: #303972;
+    white-space: nowrap;
+}
+
+.data-table th.sortable {
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s;
+}
+
+.data-table th.sortable:hover {
+    background: #E5E7EB;
+}
+
+.th-content {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.sort-icons {
+    display: flex;
+    flex-direction: column;
+    gap: -4px;
+}
+
+.sort-icons svg {
+    color: #9CA3AF;
+    transition: color 0.2s;
+}
+
+.sort-icons svg.active {
+    color: var(--primary-color);
+}
+
+.data-table tbody tr {
+    border-bottom: 1px solid #F3F4F6;
+    transition: background 0.2s;
+}
+
+.data-table tbody tr:hover {
+    background: #F9FAFB;
+}
+
+.data-table td {
+    padding: 1rem;
+    color: #4B5563;
+}
+
+.actions-column {
+    width: 100px;
+    text-align: center;
+}
+
+.actions-cell {
+    text-align: center;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: transparent;
+}
+
+.action-btn:hover {
+    transform: scale(1.1);
+}
+
+.edit-btn {
+    color: #3B82F6;
+}
+
+.edit-btn:hover {
+    background: #DBEAFE;
+}
+
+.delete-btn {
+    color: #EF4444;
+}
+
+.delete-btn:hover {
+    background: #FEE2E2;
+}
+
+.data-table-empty {
+    padding: 3rem;
+    text-align: center;
+    color: #9CA3AF;
+    background: white;
+    border-radius: 12px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .data-table {
+        font-size: 0.8rem;
+    }
+
+    .data-table th,
+    .data-table td {
+        padding: 0.75rem 0.5rem;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+}

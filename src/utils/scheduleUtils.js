@@ -27,12 +27,15 @@ export function getClassSchedule(classId, lessons = lessonsData) {
         const subject = subjectsData.find(s => s.id === lesson.subjectId);
         const teacher = teachersData.find(t => t.id === lesson.teacherId);
 
-        schedule[lesson.dayOfWeek].push({
-            ...lesson,
-            subjectName: subject?.name || 'Unknown Subject',
-            subjectColor: subject?.color || '#gray',
-            teacherName: teacher?.name || 'Unknown Teacher'
-        });
+        // SAFEGUARD: Only push if the day exists (0-6)
+        if (schedule[lesson.dayOfWeek]) {
+            schedule[lesson.dayOfWeek].push({
+                ...lesson,
+                subjectName: subject?.name || 'Unknown Subject',
+                subjectColor: subject?.color || '#gray',
+                teacherName: teacher?.name || 'Unknown Teacher'
+            });
+        }
     });
 
     // Sort each day by start time
@@ -66,11 +69,14 @@ export function getTeacherSchedule(teacherId, lessons = lessonsData) {
     teacherLessons.forEach(lesson => {
         const subject = subjectsData.find(s => s.id === lesson.subjectId);
 
-        schedule[lesson.dayOfWeek].push({
-            ...lesson,
-            subjectName: subject?.name || 'Unknown Subject',
-            subjectColor: subject?.color || '#4D44B5'
-        });
+        // SAFEGUARD: Only push if the day exists (0-6)
+        if (schedule[lesson.dayOfWeek]) {
+            schedule[lesson.dayOfWeek].push({
+                ...lesson,
+                subjectName: subject?.name || 'Unknown Subject',
+                subjectColor: subject?.color || '#4D44B5'
+            });
+        }
     });
 
     // Sort each day by start time

@@ -1,0 +1,161 @@
+.gradebook-monitor {
+    padding: 0;
+}
+
+.gradebook-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1.5rem;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.header-icon {
+    color: var(--primary-color);
+}
+
+.gradebook-header h2 {
+    margin: 0 0 0.5rem 0;
+    color: #303972;
+    font-size: 1.75rem;
+}
+
+.gradebook-header p {
+    margin: 0;
+    color: #6B7280;
+    font-size: 0.9rem;
+}
+
+.lock-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.95rem;
+}
+
+.lock-btn.locked {
+    background: #FEE2E2;
+    color: #DC2626;
+}
+
+.lock-btn.locked:hover {
+    background: #FCA5A5;
+    color: white;
+}
+
+.lock-btn.unlocked {
+    background: #DCFCE7;
+    color: #22C55E;
+}
+
+.lock-btn.unlocked:hover {
+    background: #22C55E;
+    color: white;
+}
+
+.gradebook-content {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.grade-table-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.card-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #F3F4F6;
+}
+
+.card-header-row h3 {
+    margin: 0;
+    color: #303972;
+    font-size: 1.25rem;
+}
+
+.stats-badges {
+    display: flex;
+    gap: 1rem;
+}
+
+.stat-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #F3F4FF;
+    color: var(--primary-color);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.empty-icon {
+    color: #C5CAD5;
+    margin-bottom: 1.5rem;
+}
+
+.empty-state h3 {
+    color: #303972;
+    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+}
+
+.empty-state p {
+    color: #6B7280;
+    margin: 0;
+    max-width: 400px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .gradebook-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .card-header-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .stats-badges {
+        flex-wrap: wrap;
+    }
+}

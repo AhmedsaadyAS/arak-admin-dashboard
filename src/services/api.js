@@ -1,80 +1,51 @@
+import axios from 'axios';
+
 const BASE_URL = 'http://localhost:5000';
+const TOKEN_KEY = 'arak_auth_token';
 
-class ApiError extends Error {
-    constructor(message, status) {
-        super(message);
-        this.status = status;
-        this.name = "ApiError";
+// Create Centralized Axios Instance
+const apiClient = axios.create({
+    baseURL: BASE_URL,
+    headers: {
+        'Content-Type': 'application/json'
     }
-}
+});
 
-/**
- * Validates and transforms the API response.
- * @param {Response} response 
- * @returns {Promise<any>}
- */
-async function handleResponse(response) {
-    if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`API Error: ${response.status} ${response.statusText}`, errorText);
-        throw new ApiError(`Request failed: ${response.statusText} (${response.status})`, response.status);
-    }
-    // Handle 204 No Content
-    if (response.status === 204) {
-        return null;
-    }
-    return response.json();
-}
-
-/**
- * Builds a query string from an object.
- * @param {Object} params 
- * @returns {string}
- */
-function buildQueryString(params = {}) {
-    const query = new URLSearchParams();
-    Object.keys(params).forEach(key => {
-        if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
-            query.append(key, params[key]);
+// Request Interceptor: Add Auth Token
+apiClient.interceptors.request.use(
+    (config) => {
+        // Check both local and session storage
+        const token = localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY);
+        if (token) {
+            config.headers['Authorization'] = `Bearer ${token}`;
         }
-    });
-    const queryString = query.toString();
-    return queryString ? `?${queryString}` : '';
-}
+        return config;
+    },
+    (error) => Promise.reject(error)
+);
+
+// Response Interceptor: Global Error Handling
+apiClient.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        // Handle global errors like 401 Unauthorized
+        if (error.response && error.response.status === 401) {
+            // Optional: Dispatch event or redirect logic could go here
+            console.error('Unauthorized! Token might be expired.');
+        }
+        return Promise.reject(error);
+    }
+);
 
 export const api = {
-    /**
-     * Generic HTTP Request Wrapper
-     * @param {string} endpoint 
-     * @param {Object} options 
-     */
-    request: async (endpoint, options = {}) => {
-        try {
-            const config = {
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...options.headers
-                },
-                ...options
-            };
+    // Expose client if needed directly
+    client: apiClient,
 
-            const response = await fetch(`${BASE_URL}${endpoint}`, config);
-            return handleResponse(response);
-        } catch (error) {
-            console.error(`Network or Parsing Error for ${endpoint}:`, error);
-            // Re-throw to allow components to handle specific error UI
-            throw error;
-        }
-    },
-
-    // --- System & Metrics ---
-
-    /**
-     * Checks DB connection and returns system metrics.
-     */
+    // --- System ---
     getSystemHealth: async () => {
         try {
-            return await api.request('/metrics');
+            const response = await apiClient.get('/metrics');
+            return response.data;
         } catch (error) {
             console.warn("System Health Check Failed");
             return { systemHealth: "Offline", serverUptime: "0%" };
@@ -82,7 +53,6 @@ export const api = {
     },
 
     checkHealth: async () => {
-        // Simple boolean check for the UI indicator
         try {
             const metrics = await api.getSystemHealth();
             return !!metrics;
@@ -91,83 +61,154 @@ export const api = {
         }
     },
 
-    // --- Students CRUD ---
+    // --- Students ---
 
     /**
-     * Get all students with optional matching params for search.
-     * @param {Object} params - e.g. { q: 'John', grade: 'VII A' }
+     * Get students with support for pagination and filtering.
+     * Returns an object { data, total } to support pagination.
+     * @param {Object} params - { _page, _limit, q, grade, ... }
      */
     getStudents: async (params = {}) => {
-        const qs = buildQueryString(params);
-        return api.request(`/students${qs}`);
+        // Adapt params for JSON Server v1 beta
+        const apiParams = { ...params };
+        if (apiParams._limit) {
+            apiParams._per_page = apiParams._limit;
+            delete apiParams._limit;
+        }
+
+        const response = await apiClient.get('/students', { params: apiParams });
+
+        // JSON Server v1 beta returns { data: [...], items: total, ... } for paginated requests
+        if (response.data && Array.isArray(response.data.data)) {
+            return {
+                data: response.data.data,
+                total: response.data.items
+            };
+        }
+
+        // Fallback for non-paginated or older version (array response)
+        return {
+            data: response.data,
+            total: parseInt(response.headers['x-total-count'] || response.data.length || '0', 10)
+        };
     },
 
     getStudentById: async (id) => {
-        return api.request(`/students/${id}`);
+        const numericId = parseInt(id, 10);
+        const response = await apiClient.get(`/students/${numericId}`);
+        return response.data;
     },
 
     createStudent: async (studentData) => {
-        return api.request('/students', {
-            method: 'POST',
-            body: JSON.stringify(studentData)
-        });
+        const response = await apiClient.post('/students', studentData);
+        return response.data;
     },
 
     updateStudent: async (id, studentData) => {
-        return api.request(`/students/${id}`, {
-            method: 'PUT', // or PATCH
-            body: JSON.stringify(studentData)
-        });
+        const numericId = parseInt(id, 10);
+        const response = await apiClient.put(`/students/${numericId}`, studentData);
+        return response.data;
     },
 
     deleteStudent: async (id) => {
-        return api.request(`/students/${id}`, {
-            method: 'DELETE'
-        });
+        const numericId = parseInt(id, 10);
+
+        // Data Integrity: Check for dependencies before deletion
+        try {
+            const [attendance, evaluations] = await Promise.all([
+                apiClient.get('/attendance', { params: { studentId: numericId } }),
+                apiClient.get('/evaluations', { params: { studentId: numericId } })
+            ]);
+
+            const dependencies = {
+                attendance: attendance.data?.length || 0,
+                evaluations: evaluations.data?.length || 0
+            };
+
+            const totalDeps = dependencies.attendance + dependencies.evaluations;
+
+            if (totalDeps > 0) {
+                const error = new Error("Cannot delete student with existing records");
+                error.dependencies = dependencies;
+                throw error;
+            }
+
+            // Safe to delete
+            const response = await apiClient.delete(`/students/${numericId}`);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
     },
 
-    // --- Teachers CRUD ---
+    // --- Teachers ---
 
-    /**
-     * Get all teachers with optional search.
-     * @param {Object} params - e.g. { q: 'Math' }
-     */
     getTeachers: async (params = {}) => {
-        const qs = buildQueryString(params);
-        return api.request(`/teachers${qs}`);
+        const response = await apiClient.get('/teachers', { params });
+        return response.data;
     },
 
     getTeacherById: async (id) => {
-        return api.request(`/teachers/${id}`);
+        const numericId = parseInt(id, 10);
+        const response = await apiClient.get(`/teachers/${numericId}`);
+        return response.data;
     },
 
     createTeacher: async (teacherData) => {
-        return api.request('/teachers', {
-            method: 'POST',
-            body: JSON.stringify(teacherData)
-        });
+        const response = await apiClient.post('/teachers', teacherData);
+        return response.data;
     },
 
     updateTeacher: async (id, teacherData) => {
-        return api.request(`/teachers/${id}`, {
-            method: 'PUT',
-            body: JSON.stringify(teacherData)
-        });
+        const numericId = parseInt(id, 10);
+        const response = await apiClient.put(`/teachers/${numericId}`, teacherData);
+        return response.data;
     },
 
     deleteTeacher: async (id) => {
-        return api.request(`/teachers/${id}`, {
-            method: 'DELETE'
-        });
+        const numericId = parseInt(id, 10);
+
+        // Data Integrity: Check for dependencies before deletion
+        try {
+            const [classes, tasks, schedules] = await Promise.all([
+                apiClient.get('/classes', { params: { teacherId: numericId } }),
+                apiClient.get('/tasks', { params: { teacherId: numericId } }),
+                apiClient.get('/schedules', { params: { teacherId: numericId } })
+            ]);
+
+            const dependencies = {
+                classes: classes.data?.length || 0,
+                tasks: tasks.data?.length || 0,
+                schedules: schedules.data?.length || 0
+            };
+
+            const totalDeps = dependencies.classes + dependencies.tasks + dependencies.schedules;
+
+            if (totalDeps > 0) {
+                // Throw error with dependency details for UI to handle
+                const error = new Error("Cannot delete teacher with active dependencies");
+                error.dependencies = dependencies;
+                throw error;
+            }
+
+            // Safe to delete
+            const response = await apiClient.delete(`/teachers/${numericId}`);
+            return response.data;
+        } catch (error) {
+            // Re-throw with dependency info if available
+            throw error;
+        }
     },
 
-    // --- Events & Fees (Placeholders for Future Expansion) ---
+    // --- Other ---
 
     getEvents: async () => {
-        return api.request('/events');
+        const response = await apiClient.get('/events');
+        return response.data;
     },
 
     getFees: async () => {
-        return api.request('/fees');
+        const response = await apiClient.get('/fees');
+        return response.data;
     }
 };

@@ -1,15 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 
-export default function EventForm({ onClose, onSave }) {
+export default function EventForm({ onClose, onSave, initialData = null }) {
     const [formData, setFormData] = useState({
         title: '',
-        type: 'Academic',
+        type: 'Meeting',
         date: new Date().toISOString().split('T')[0],
         startTime: '09:00',
         endTime: '10:00',
         description: ''
     });
+
+    // Populate form if editing
+    useEffect(() => {
+        if (initialData) {
+            setFormData({
+                title: initialData.title || '',
+                type: initialData.type || 'Meeting',
+                date: initialData.date || new Date().toISOString().split('T')[0],
+                startTime: initialData.startTime || '09:00',
+                endTime: initialData.endTime || '10:00',
+                description: initialData.description || ''
+            });
+        }
+    }, [initialData]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -20,7 +34,7 @@ export default function EventForm({ onClose, onSave }) {
         <div className="modal-overlay">
             <div className="modal-content" style={{ maxWidth: '500px' }}>
                 <div className="modal-header">
-                    <h3>Add New Event</h3>
+                    <h3>{initialData ? 'Edit Event' : 'Add New Event'}</h3>
                     <button className="icon-btn" onClick={onClose}>
                         <X size={20} />
                     </button>
@@ -42,10 +56,11 @@ export default function EventForm({ onClose, onSave }) {
                             value={formData.type}
                             onChange={(e) => setFormData({ ...formData, type: e.target.value })}
                         >
-                            <option>Academic</option>
+                            <option>Holiday</option>
+                            <option>Exam</option>
+                            <option>Meeting</option>
                             <option>Sports</option>
                             <option>Cultural</option>
-                            <option>Holiday</option>
                         </select>
                     </div>
                     <div className="form-group">
@@ -83,11 +98,14 @@ export default function EventForm({ onClose, onSave }) {
                             value={formData.description}
                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                             rows="3"
+                            placeholder="Optional event details..."
                         />
                     </div>
                     <div className="modal-actions">
                         <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
-                        <button type="submit" className="btn-primary">Create Event</button>
+                        <button type="submit" className="btn-primary">
+                            {initialData ? 'Update Event' : 'Create Event'}
+                        </button>
                     </div>
                 </form>
             </div>

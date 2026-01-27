@@ -1,0 +1,24 @@
+.grade-chart-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.chart-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #F3F4F6;
+}
+
+.chart-header h3 {
+    margin: 0 0 0.5rem 0;
+    color: #303972;
+    font-size: 1.25rem;
+}
+
+.chart-header p {
+    margin: 0;
+    color: #6B7280;
+    font-size: 0.9rem;
+}

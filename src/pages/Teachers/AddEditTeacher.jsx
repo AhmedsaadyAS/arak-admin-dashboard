@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Save, X, Upload } from 'lucide-react';
+import { api } from '../../services/api';
 import '../../styles/layout.css';
 import '../Dashboard/dashboard.css';
 
@@ -19,8 +20,24 @@ export default function AddEditTeacher({ teacher, onBack, onSave }) {
         address: teacher?.address || '',
         city: teacher?.city || '',
         about: teacher?.about || '',
-        status: teacher?.status || 'Active'
+        status: teacher?.status || 'Active',
+        assignedClasses: teacher?.assignedClasses || []
     });
+
+    const [availableClasses, setAvailableClasses] = useState([]);
+
+    // Fetch classes on mount
+    useEffect(() => {
+        const fetchClasses = async () => {
+            try {
+                const response = await api.client.get('/classes');
+                setAvailableClasses(response.data || []);
+            } catch (error) {
+                console.error("Failed to fetch classes", error);
+            }
+        };
+        fetchClasses();
+    }, []);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -182,6 +199,34 @@ export default function AddEditTeacher({ teacher, onBack, onSave }) {
                                 <option value="Mathematics">Mathematics</option>
                                 <option value="Technology">Technology</option>
                             </select>
+                        </div>
+
+                        <div style={{ gridColumn: 'span 2' }}>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Assigned Classes</label>
+                            <select
+                                multiple
+                                value={formData.assignedClasses}
+                                onChange={(e) => {
+                                    const selected = Array.from(e.target.selectedOptions, option => parseInt(option.value));
+                                    setFormData(prev => ({ ...prev, assignedClasses: selected }));
+                                }}
+                                style={{
+                                    width: '100%',
+                                    padding: '0.75rem',
+                                    border: '1px solid #e5e7eb',
+                                    borderRadius: '8px',
+                                    minHeight: '120px'
+                                }}
+                            >
+                                {availableClasses.map(cls => (
+                                    <option key={cls.id} value={cls.id}>
+                                        {cls.name} {cls.grade ? `(Grade ${cls.grade})` : ''}
+                                    </option>
+                                ))}
+                            </select>
+                            <small style={{ color: '#6B7280', marginTop: '0.25rem', display: 'block' }}>
+                                Hold Ctrl (Windows) or Cmd (Mac) to select multiple classes
+                            </small>
                         </div>
 
                         <div>

@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, AlertCircle } from 'lucide-react';
-import { classesData } from '../../mock/classes';
-import { subjectsData } from '../../mock/subjects';
-import { teachersData } from '../../mock/teachers';
+import { api } from '../../services/api';
 import { detectTimeConflicts } from '../../utils/scheduleUtils';
 
 export default function LessonForm({ isOpen, onClose, onSave, initialData, allLessons }) {
+    const [classes, setClasses] = useState([]);
+    const [subjects, setSubjects] = useState([]);
+    const [teachers, setTeachers] = useState([]);
+    const [loading, setLoading] = useState(true);
+
     const [formData, setFormData] = useState({
         classId: '',
         subjectId: '',
@@ -18,6 +21,41 @@ export default function LessonForm({ isOpen, onClose, onSave, initialData, allLe
     const [error, setError] = useState(null);
     const [debugConflicts, setDebugConflicts] = useState([]);
 
+    // Fetch dropdown data
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [classesRes, subjectsRes, teachersRes] = await Promise.all([
+                    api.client.get('/classes'),
+                    api.client.get('/subjects'),
+                    api.getTeachers()
+                ]);
+                setClasses(classesRes.data || []);
+                setSubjects(subjectsRes.data || []);
+                setTeachers(teachersRes);
+
+                // Set defaults if creating new and data loaded
+                if (!initialData && classesRes.data?.length > 0) {
+                    setFormData(prev => ({
+                        ...prev,
+                        classId: classesRes.data[0].id.toString(),
+                        subjectId: subjectsRes.data?.[0]?.id.toString() || '',
+                        teacherId: teachersRes?.[0]?.id.toString() || ''
+                    }));
+                }
+            } catch (err) {
+                console.error("Failed to fetch lesson form data", err);
+                setError("Failed to load options. Please try again.");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (isOpen) {
+            fetchData();
+        }
+    }, [isOpen]);
+
     useEffect(() => {
         if (initialData) {
             setFormData({
@@ -29,16 +67,6 @@ export default function LessonForm({ isOpen, onClose, onSave, initialData, allLe
                 startTime: initialData.startTime,
                 endTime: initialData.endTime,
                 room: initialData.room
-            });
-        } else {
-            setFormData({
-                classId: classesData[0]?.id.toString() || '',
-                subjectId: subjectsData[0]?.id.toString() || '',
-                teacherId: teachersData[0]?.id.toString() || '',
-                dayOfWeek: 0,
-                startTime: '08:00',
-                endTime: '09:00',
-                room: 'Room 101'
             });
         }
         setError(null);
@@ -121,8 +149,8 @@ export default function LessonForm({ isOpen, onClose, onSave, initialData, allLe
 
                     <div className="form-group">
                         <label>Class</label>
-                        <select name="classId" value={formData.classId} onChange={handleChange} required>
-                            {classesData.map(c => (
+                        <select name="classId" value={formData.classId} onChange={handleChange} required disabled={loading}>
+                            {classes.map(c => (
                                 <option key={c.id} value={c.id}>{c.name}</option>
                             ))}
                         </select>
@@ -130,8 +158,8 @@ export default function LessonForm({ isOpen, onClose, onSave, initialData, allLe
 
                     <div className="form-group">
                         <label>Subject</label>
-                        <select name="subjectId" value={formData.subjectId} onChange={handleChange} required>
-                            {subjectsData.map(s => (
+                        <select name="subjectId" value={formData.subjectId} onChange={handleChange} required disabled={loading}>
+                            {subjects.map(s => (
                                 <option key={s.id} value={s.id}>{s.name}</option>
                             ))}
                         </select>
@@ -139,8 +167,8 @@ export default function LessonForm({ isOpen, onClose, onSave, initialData, allLe
 
                     <div className="form-group">
                         <label>Teacher</label>
-                        <select name="teacherId" value={formData.teacherId} onChange={handleChange} required>
-                            {teachersData.map(t => (
+                        <select name="teacherId" value={formData.teacherId} onChange={handleChange} required disabled={loading}>
+                            {teachers.map(t => (
                                 <option key={t.id} value={t.id}>{t.name}</option>
                             ))}
                         </select>

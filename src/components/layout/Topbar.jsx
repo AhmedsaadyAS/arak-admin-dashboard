@@ -1,12 +1,20 @@
 import React from "react";
-import { Search, Bell, Settings, RefreshCw } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Search, Bell, Settings, RefreshCw, LogOut } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import ApiStatus from "../common/ApiStatus";
 import { useRefresh } from "../../context/RefreshContext";
+import { useAuth } from "../../context/AuthContext";
 import "../../styles/layout.css";
 
 export default function Topbar({ pageTitle = "Dashboard" }) {
   const { triggerRefresh } = useRefresh();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   return (
     <header className="topbar">
@@ -32,14 +40,17 @@ export default function Topbar({ pageTitle = "Dashboard" }) {
           <Link to="/settings" className="icon-btn" title="Settings">
             <Settings size={20} />
           </Link>
+          <button className="icon-btn" onClick={handleLogout} title="Logout">
+            <LogOut size={20} />
+          </button>
         </div>
 
         <div className="user-profile">
           <div className="user-info">
-            <span className="user-name">Nabila A.</span>
-            <span className="user-role">Admin</span>
+            <span className="user-name">{user?.name || 'User'}</span>
+            <span className="user-role">{user?.role || 'Admin'}</span>
           </div>
-          <div className="user-avatar"></div>
+          <div className="user-avatar">{user?.avatar || 'U'}</div>
         </div>
       </div>
     </header>

@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Users, GraduationCap, Calendar, MessageCircle } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
-import { studentsData } from '../../mock/students';
-import { getHighRiskStudents } from '../../utils/aiInsights';
+import { api } from '../../services/api';
+import ClassDistributionChart from '../../components/Dashboard/ClassDistributionChart';
+import StudentsPerTeacherChart from '../../components/Dashboard/StudentsPerTeacherChart';
 import './dashboard.css';
 
 const performanceData = [
@@ -21,7 +22,26 @@ const performanceData = [
 ];
 
 export default function Dashboard() {
-  const highRiskStudents = getHighRiskStudents(studentsData).slice(0, 5); // Show top 5
+  const [students, setStudents] = useState([]);
+  const [teachers, setTeachers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch ALL students for analytics (using large limit)
+        const stuRes = await api.getStudents({ _limit: 200 });
+        const teaRes = await api.getTeachers({ _limit: 50 });
+        setStudents(stuRes.data || []);
+        setTeachers(teaRes || []); // getTeachers returns array directly in api.js currently? Double check api.js
+      } catch (error) {
+        console.error("Dashboard verify failed", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   return (
     <div className="dashboard-page">
@@ -33,7 +53,7 @@ export default function Dashboard() {
           </div>
           <div className="stat-content">
             <span className="stat-label">Students</span>
-            <h3 className="stat-value">932</h3>
+            <h3 className="stat-value">{students.length}</h3>
           </div>
         </div>
 
@@ -43,7 +63,7 @@ export default function Dashboard() {
           </div>
           <div className="stat-content">
             <span className="stat-label">Teachers</span>
-            <h3 className="stat-value">754</h3>
+            <h3 className="stat-value">{teachers.length}</h3>
           </div>
         </div>
 
@@ -73,10 +93,6 @@ export default function Dashboard() {
         <div className="chart-card school-performance">
           <div className="card-header">
             <h3>School Performance</h3>
-            <div className="chart-legend">
-              <span className="legend-item"><span className="dot orange"></span> This Week</span>
-              <span className="legend-item"><span className="dot red"></span> Last Week</span>
-            </div>
           </div>
           <div className="chart-container">
             <ResponsiveContainer width="100%" height={300}>
@@ -101,33 +117,9 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="chart-card high-risk-students">
-          <div className="card-header">
-            <h3>High Risk Students (AI Insights)</h3>
-            <span className="badge" style={{ background: '#FEECEC', color: '#EE3636' }}>Action Needed</span>
-          </div>
-          <div className="risk-list">
-            {highRiskStudents.length > 0 ? (
-              highRiskStudents.map(student => (
-                <div key={student.id} className="risk-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 0', borderBottom: '1px solid #f3f4f6' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#FEECEC', color: '#EE3636', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '0.8rem' }}>
-                      {student.name.split(' ').map(n => n[0]).join('')}
-                    </div>
-                    <div>
-                      <div style={{ fontWeight: '600', fontSize: '0.9rem' }}>{student.name}</div>
-                      <div style={{ fontSize: '0.75rem', color: '#EE3636' }}>{student.mainIssue}</div>
-                    </div>
-                  </div>
-                  <button className="icon-btn" style={{ width: '28px', height: '28px', background: '#f9fafb' }}>
-                    <Users size={14} />
-                  </button>
-                </div>
-              ))
-            ) : (
-              <p style={{ color: '#A098AE', textAlign: 'center', padding: '1rem' }}>No high risk students detected.</p>
-            )}
-          </div>
+        {/* Replaced High Risk List with Students Per Teacher Chart */}
+        <div className="chart-card high-risk-students" style={{ padding: 0, overflow: 'hidden', border: 'none', boxShadow: 'none' }}>
+          <StudentsPerTeacherChart students={students} teachers={teachers} />
         </div>
       </div>
 
@@ -169,20 +161,8 @@ export default function Dashboard() {
           </table>
         </div>
 
-        <div className="chart-card performance-bar">
-          <div className="card-header">
-            <h3>Performance</h3>
-          </div>
-          <div className="chart-container">
-            {/* Placeholder for bar chart */}
-            <div style={{ height: '200px', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around' }}>
-              <div style={{ width: '20px', height: '60%', background: '#FB7D5B', borderRadius: '10px 10px 0 0' }}></div>
-              <div style={{ width: '20px', height: '80%', background: '#FCC43E', borderRadius: '10px 10px 0 0' }}></div>
-              <div style={{ width: '20px', height: '40%', background: '#FB7D5B', borderRadius: '10px 10px 0 0' }}></div>
-              <div style={{ width: '20px', height: '90%', background: '#FCC43E', borderRadius: '10px 10px 0 0' }}></div>
-              <div style={{ width: '20px', height: '50%', background: '#FB7D5B', borderRadius: '10px 10px 0 0' }}></div>
-            </div>
-          </div>
+        <div className="chart-card performance-bar" style={{ padding: 0, overflow: 'hidden', border: 'none', boxShadow: 'none' }}>
+          <ClassDistributionChart students={students} />
         </div>
       </div>
     </div>

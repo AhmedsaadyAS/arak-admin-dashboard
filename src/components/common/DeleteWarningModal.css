@@ -1,0 +1,131 @@
+.delete-warning-modal {
+    background: white;
+    border-radius: 16px;
+    padding: 2.5rem;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    position: relative;
+    animation: slideUp 0.3s ease;
+}
+
+.warning-icon {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    color: #F59E0B;
+}
+
+.warning-title {
+    font-size: 1.75rem;
+    font-weight: bold;
+    color: #303972;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.warning-message {
+    background: #FEF3C7;
+    border-left: 4px solid #F59E0B;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.warning-message p {
+    color: #92400E;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.dependencies-list {
+    background: #F9FAFB;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.dependencies-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #374151;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #E5E7EB;
+}
+
+.dependency-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.dependency-item:last-child {
+    border-bottom: none;
+}
+
+.dependency-type {
+    color: #4B5563;
+    font-weight: 500;
+}
+
+.dependency-count {
+    background: #EF4444;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.warning-instructions {
+    background: #E0E7FF;
+    border-left: 4px solid #3B82F6;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.warning-instructions p {
+    color: #1E3A8A;
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+.modal-actions-center {
+    display: flex;
+    justify-content: center;
+}
+
+.action-btn-primary {
+    padding: 0.875rem 3rem;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.action-btn-primary:hover {
+    background: #3730A3;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(77, 68, 181, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .delete-warning-modal {
+        padding: 1.5rem;
+    }
+
+    .warning-title {
+        font-size: 1.5rem;
+    }
+}
