@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import LoadingSpinner from '../common/LoadingSpinner';
@@ -6,10 +7,15 @@ import LoadingSpinner from '../common/LoadingSpinner';
 /**
  * ProtectedRoute Component
  * Wraps routes that require authentication
- * Redirects to login page if user is not authenticated
+ * Supports both role-based and permission-based access control
+ * 
+ * @param {object} props
+ * @param {React.ReactNode} props.children - Child components to render
+ * @param {string[]} props.allowedRoles - Optional: Array of role names that can access this route
+ * @param {string|string[]} props.requiredPermission - Optional: Permission(s) required to access this route
  */
-export default function ProtectedRoute({ children, allowedRoles }) {
-    const { isAuthenticated, loading } = useAuth();
+export default function ProtectedRoute({ children, allowedRoles = null, requiredPermission = null }) {
+    const { isAuthenticated, loading, hasRole, hasPermission, user } = useAuth();
     const location = useLocation();
 
     // Show loading spinner while checking auth status
@@ -31,21 +37,34 @@ export default function ProtectedRoute({ children, allowedRoles }) {
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
-    // 2. Check Role (Role-Based Access Control)
-    const { hasRole, user } = useAuth();
+    // 2. Check Access Control (Role-Based or Permission-Based)
+    let allowed = true;
 
-    // Default: Web Panel is strict "Admin" or "Super Admin" only area
-    // If allowedRoles is passed, check specific roles. 
-    // Otherwise, enforce default Admin Access.
-    const allowed = allowedRoles
-        ? hasRole(allowedRoles)
-        : hasRole(['Admin', 'Super Admin']);
+    // If permission is specified, check permission first
+    if (requiredPermission) {
+        allowed = hasPermission(requiredPermission);
+    }
+    // If roles are specified, check roles
+    else if (allowedRoles) {
+        allowed = hasRole(allowedRoles);
+    }
+    // Default: any authenticated user can access (specific permissions are on each route)
+    // No additional restriction needed here
 
     if (!allowed) {
-        console.warn(`Access Denied for user ${user?.username} (Role: ${user?.role})`);
+        console.warn(`Access Denied for user ${user?.email} (Role: ${user?.role}) to ${location.pathname}`);
         return <Navigate to="/unauthorized" replace />;
     }
 
     // 3. Render Content
     return children;
 }
+
+ProtectedRoute.propTypes = {
+    children: PropTypes.node.isRequired,
+    allowedRoles: PropTypes.arrayOf(PropTypes.string),
+    requiredPermission: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.arrayOf(PropTypes.string)
+    ])
+};

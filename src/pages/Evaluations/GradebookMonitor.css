@@ -35,17 +35,46 @@
     font-size: 0.9rem;
 }
 
-.lock-btn {
+.header-actions {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    padding: 0.875rem 1.5rem;
+}
+
+/* Export button */
+.export-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: var(--primary-color);
+    color: white;
     border: none;
     border-radius: 8px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
+}
+
+.export-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(77, 68, 181, 0.3);
+}
+
+/* Lock / Unlock */
+.lock-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.9rem;
 }
 
 .lock-btn.locked {
@@ -68,6 +97,58 @@
     color: white;
 }
 
+/* ─── Summary Stat Cards ───────────────────────────── */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+}
+
+.summary-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: white;
+    padding: 1.25rem 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.summary-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.summary-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.summary-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.summary-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #303972;
+    line-height: 1.2;
+}
+
+.summary-label {
+    font-size: 0.8rem;
+    color: #6B7280;
+    margin-top: 2px;
+}
+
+/* ─── Gradebook Content ────────────────────────────── */
 .gradebook-content {
     display: grid;
     gap: 1.5rem;
@@ -112,6 +193,56 @@
     font-weight: 600;
 }
 
+/* ─── Grade Badges ─────────────────────────────────── */
+.grade-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3rem 0.75rem;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.grade-badge.grade-na {
+    background: #F3F4F6;
+    color: #9CA3AF;
+}
+
+.letter-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+/* Per-row export button */
+.export-row-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.75rem;
+    background: #F3F4FF;
+    color: var(--primary-color);
+    border: 1px solid #E0DDFF;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+
+.export-row-btn:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+/* ─── Empty State ──────────────────────────────────── */
 .empty-state {
     display: flex;
     flex-direction: column;
@@ -141,12 +272,23 @@
     max-width: 400px;
 }
 
-/* Responsive */
+/* ─── Responsive ───────────────────────────────────── */
+@media (max-width: 992px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
 @media (max-width: 768px) {
     .gradebook-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 1rem;
+    }
+
+    .header-actions {
+        width: 100%;
+        flex-wrap: wrap;
     }
 
     .card-header-row {
@@ -157,5 +299,9 @@
 
     .stats-badges {
         flex-wrap: wrap;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
     }
 }

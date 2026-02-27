@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { CheckCircle, XCircle, AlertCircle, Info, X } from 'lucide-react';
 import './Toast.css';
 
@@ -11,7 +12,7 @@ import './Toast.css';
  * @param {function} onClose - Callback when toast is closed
  * @param {number} duration - Auto-dismiss duration in ms (0 = no auto-dismiss)
  */
-export default function Toast({ type = 'info', message, onClose, duration = 3000 }) {
+const Toast = React.memo(function Toast({ type = 'info', message, onClose, duration = 3000 }) {
     useEffect(() => {
         if (duration > 0) {
             const timer = setTimeout(() => {
@@ -37,4 +38,13 @@ export default function Toast({ type = 'info', message, onClose, duration = 3000
             </button>
         </div>
     );
-}
+});
+
+Toast.propTypes = {
+    type: PropTypes.oneOf(['success', 'error', 'warning', 'info']),
+    message: PropTypes.string.isRequired,
+    onClose: PropTypes.func.isRequired,
+    duration: PropTypes.number
+};
+
+export default Toast;

@@ -1,75 +1,127 @@
-import React, { useState } from 'react';
-import { Search, Plus, Edit2, Trash2, KeyRound, Users as UsersIcon } from 'lucide-react';
-import { usersData } from '../../mock/users';
-import { parentsData } from '../../mock/parents';
-import { studentsData } from '../../mock/students';
-import { rolesData } from '../../mock/roles';
+import React, { useState, useEffect } from 'react';
+import { Search, Plus, Edit2, Trash2, KeyRound, Users as UsersIcon, RefreshCw } from 'lucide-react';
+import { api } from '../../services/api';
+import { dataIntegrityService } from '../../services/dataIntegrityService';
+import { useAuth } from '../../context/AuthContext';
+import { PERMISSIONS } from '../../config/permissions';
 import AddEditUser from './AddEditUser';
 import '../../styles/layout.css';
 import '../Dashboard/dashboard.css';
 
 export default function UserManagement() {
-    // Simulate current logged-in user role (in real app, this would come from auth context)
-    const [currentUserRole, setCurrentUserRole] = useState("Super Admin");
-
+    const { user, hasPermission } = useAuth();
     const [activeTab, setActiveTab] = useState('admins'); // 'admins' or 'parents'
-    const [adminUsers, setAdminUsers] = useState(usersData);
-    const [parents, setParents] = useState(parentsData);
+    const [adminUsers, setAdminUsers] = useState([]);
+    const [parents, setParents] = useState([]);
+    const [roles, setRoles] = useState([]);
+    const [students, setStudents] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [roleFilter, setRoleFilter] = useState('All');
     const [isEditing, setIsEditing] = useState(false);
     const [currentEditUser, setCurrentEditUser] = useState(null);
     const [editUserType, setEditUserType] = useState('admin'); // 'admin' or 'parent'
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    // Permission checks
-    const canAddAdmin = currentUserRole === "Super Admin";
-    const canDeleteAdmin = currentUserRole === "Super Admin";
-    const canAddParent = ["Super Admin", "School Administrator"].includes(currentUserRole);
-    const canEditParent = ["Super Admin", "School Administrator"].includes(currentUserRole);
-    const canDeleteParent = ["Super Admin", "School Administrator"].includes(currentUserRole);
+    // Permission checks using hasPermission for granular control
+    const canManageAdmins = hasPermission(PERMISSIONS.USER_MANAGEMENT);
+    // const canManageUsers = hasPermission(PERMISSIONS.USER_MANAGEMENT); // Redundant if same as above
+    const canAddAdmin = hasPermission(PERMISSIONS.CREATE_USER);
+    const canEditAdmin = hasPermission(PERMISSIONS.EDIT_USER);
+    const canDeleteAdmin = hasPermission(PERMISSIONS.DELETE_USER);
+
+    const canAddParent = hasPermission(PERMISSIONS.CREATE_PARENT);
+    const canEditParent = hasPermission(PERMISSIONS.EDIT_PARENT);
+    const canDeleteParent = hasPermission(PERMISSIONS.DELETE_PARENT);
+
+    // Fetch data from API
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+    const fetchData = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const [usersData, parentsData, rolesData, studentsResult] = await Promise.all([
+                api.getUsers(),
+                api.getParents(),
+                api.getRoles(),
+                api.getStudents()
+            ]);
+            setAdminUsers(usersData);
+            setParents(parentsData);
+            setRoles(rolesData);
+            setStudents(Array.isArray(studentsResult) ? studentsResult : (studentsResult?.data || []));
+        } catch (err) {
+            console.error('Failed to fetch user data:', err);
+            setError('Failed to load users. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // Filter admin users
     const filteredAdmins = adminUsers.filter(user => {
-        const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            user.email.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesRole = roleFilter === 'All' || user.role === roleFilter;
+        const name = user?.name || '';
+        const email = user?.email || '';
+        const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            email.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesRole = roleFilter === 'All' || user?.role === roleFilter;
         return matchesSearch && matchesRole;
     });
 
     // Filter parent users
     const filteredParents = parents.filter(parent => {
-        const matchesSearch = parent.parentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            parent.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            parent.email.toLowerCase().includes(searchTerm.toLowerCase());
+        const parentName = parent?.parentName || '';
+        const username = parent?.username || '';
+        const email = parent?.email || '';
+        const matchesSearch = parentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            email.toLowerCase().includes(searchTerm.toLowerCase());
         return matchesSearch;
     });
 
     // Get student names for parent display
     const getStudentNames = (studentIds) => {
+        if (!studentIds || !Array.isArray(studentIds)) return 'None';
+        if (!students || !Array.isArray(students)) return 'Loading...';
         return studentIds.map(id => {
-            const student = studentsData.find(s => s.id === id);
+            const student = students.find(s => s.id === id);
             return student ? student.name : 'Unknown';
-        }).join(', ');
+        }).join(', ') || 'None';
     };
 
-    const handleDeleteAdmin = (userName, userRole) => {
+    const handleDeleteAdmin = async (userId, userName) => {
         if (!canDeleteAdmin) {
             alert('You do not have permission to delete admin users.');
             return;
         }
         if (confirm(`Are you sure you want to delete admin user: ${userName}?`)) {
-            setAdminUsers(adminUsers.filter(u => u.name !== userName));
+            try {
+                await api.deleteUser(userId);
+                setAdminUsers(adminUsers.filter(u => u.id !== userId));
+            } catch (err) {
+                console.error('Failed to delete user:', err);
+                alert('Failed to delete user. Please try again.');
+            }
         }
     };
 
-    const handleDeleteParent = (parentId) => {
+    const handleDeleteParent = async (parentId) => {
         if (!canDeleteParent) {
             alert('You do not have permission to delete parent users.');
             return;
         }
         const parent = parents.find(p => p.id === parentId);
         if (confirm(`Are you sure you want to delete parent: ${parent.parentName}?`)) {
-            setParents(parents.filter(p => p.id !== parentId));
+            try {
+                await api.deleteParent(parentId);
+                setParents(parents.filter(p => p.id !== parentId));
+            } catch (err) {
+                console.error('Failed to delete parent:', err);
+                alert('Failed to delete parent. Please try again.');
+            }
         }
     };
 
@@ -98,39 +150,52 @@ export default function UserManagement() {
         setIsEditing(true);
     };
 
-    const handleSaveUser = (userData, userType) => {
-        if (userType === 'admin') {
-            if (currentEditUser) {
-                // Update existing admin
-                setAdminUsers(adminUsers.map(u => u.id === currentEditUser.id ? { ...u, ...userData } : u));
+    const handleSaveUser = async (userData, userType) => {
+        try {
+            if (userType === 'admin') {
+                if (currentEditUser) {
+                    // Update existing admin
+                    const updatedUser = await api.updateUser(currentEditUser.id, userData);
+                    setAdminUsers(adminUsers.map(u => u.id === currentEditUser.id ? updatedUser : u));
+                } else {
+                    // Add new admin
+                    const newAdmin = {
+                        status: 'Active',
+                        lastLogin: 'Never',
+                        ...userData
+                    };
+                    const createdUser = await api.createUser(newAdmin);
+                    setAdminUsers([...adminUsers, createdUser]);
+                }
             } else {
-                // Add new admin
-                const newAdmin = {
-                    id: Date.now(), // Safer ID generation
-                    status: 'Active',
-                    lastLogin: 'Never',
-                    ...userData
-                };
-                setAdminUsers([...adminUsers, newAdmin]);
+                let savedParent;
+                const oldLinkedStudents = currentEditUser?.linkedStudents || [];
+
+                if (currentEditUser) {
+                    // Update existing parent
+                    savedParent = await api.updateParent(currentEditUser.id, userData);
+                    setParents(parents.map(p => p.id === currentEditUser.id ? savedParent : p));
+                } else {
+                    // Add new parent
+                    const newParent = {
+                        status: 'Active',
+                        lastLogin: 'Never',
+                        createdAt: new Date().toISOString().split('T')[0],
+                        ...userData
+                    };
+                    savedParent = await api.createParent(newParent);
+                    setParents([...parents, savedParent]);
+                }
+
+                // Sync: update students' denormalized parent fields
+                await dataIntegrityService.syncParentToStudents(savedParent, oldLinkedStudents);
             }
-        } else {
-            if (currentEditUser) {
-                // Update existing parent
-                setParents(parents.map(p => p.id === currentEditUser.id ? { ...p, ...userData } : p));
-            } else {
-                // Add new parent
-                const newParent = {
-                    id: Date.now(), // Safer ID generation
-                    status: 'Active',
-                    lastLogin: 'Never',
-                    createdAt: new Date().toISOString().split('T')[0],
-                    ...userData
-                };
-                setParents([...parents, newParent]);
-            }
+            setIsEditing(false);
+            setCurrentEditUser(null);
+        } catch (err) {
+            console.error('Failed to save user:', err);
+            alert('Failed to save user. Please try again.');
         }
-        setIsEditing(false);
-        setCurrentEditUser(null);
     };
 
     if (isEditing) {
@@ -138,12 +203,14 @@ export default function UserManagement() {
             <AddEditUser
                 user={currentEditUser}
                 userType={editUserType}
-                currentUserRole={currentUserRole}
+                currentUserRole={user?.role || 'Unknown'}
                 onBack={() => {
                     setIsEditing(false);
                     setCurrentEditUser(null);
                 }}
                 onSave={(userData) => handleSaveUser(userData, editUserType)}
+                roles={roles}
+                students={students}
             />
         );
     }
@@ -154,25 +221,15 @@ export default function UserManagement() {
             <div className="card-header" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '1rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <h3>User Management</h3>
-
-                    {/* Dev Tool: Role Switcher */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#FFF4E5', padding: '0.25rem 0.75rem', borderRadius: '8px', border: '1px solid #FFA756' }}>
-                        <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#B95000' }}>Dev: Switch Role</span>
-                        <select
-                            value={currentUserRole}
-                            onChange={(e) => setCurrentUserRole(e.target.value)}
-                            style={{ border: 'none', background: 'transparent', fontSize: '0.85rem', color: '#B95000', cursor: 'pointer', outline: 'none' }}
-                        >
-                            <option value="Super Admin">Super Admin</option>
-                            <option value="School Administrator">School Admin</option>
-                            <option value="Finance Administrator">Finance Admin</option>
-                            <option value="Teacher">Teacher</option>
-                        </select>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#F3F4FF', padding: '0.5rem 1rem', borderRadius: '8px' }}>
+                        <span style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--primary-color)' }}>Current Role: {user?.role || 'Unknown'}</span>
                     </div>
                     <div className="topbar-actions">
                         <div className="search-bar">
                             <Search size={18} className="search-icon" />
                             <input
+                                id="userSearch"
+                                name="userSearch"
                                 type="text"
                                 placeholder={activeTab === 'admins' ? "Search admin users..." : "Search parents..."}
                                 value={searchTerm}
@@ -181,12 +238,14 @@ export default function UserManagement() {
                         </div>
                         {activeTab === 'admins' && (
                             <select
+                                id="roleFilter"
+                                name="roleFilter"
                                 value={roleFilter}
                                 onChange={(e) => setRoleFilter(e.target.value)}
                                 style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid #e5e7eb', marginRight: '1rem' }}
                             >
                                 <option>All</option>
-                                {rolesData.map(role => <option key={role.id}>{role.name}</option>)}
+                                {roles.map(role => <option key={role.id}>{role.name}</option>)}
                             </select>
                         )}
                         {activeTab === 'admins' && canAddAdmin && (
@@ -258,59 +317,73 @@ export default function UserManagement() {
             {/* Admin Users Table */}
             {activeTab === 'admins' && (
                 <div className="chart-card" style={{ padding: '0' }}>
-                    <table className="simple-table" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 1rem', padding: '0 1.5rem' }}>
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Role</th>
-                                <th>Status</th>
-                                <th>Last Login</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredAdmins.map(user => (
-                                <tr key={user.id} style={{ background: 'white', boxShadow: '0 2px 5px rgba(0,0,0,0.02)' }}>
-                                    <td style={{ padding: '1rem', fontWeight: 'bold' }}>{user.name}</td>
-                                    <td>{user.email}</td>
-                                    <td><span className="badge" style={{ background: '#F3F4FF', color: 'var(--primary-color)' }}>{user.role}</span></td>
-                                    <td>
-                                        <span className={`badge ${user.status === 'Active' ? 'status-present' : 'status-absent'}`}
-                                            style={{
-                                                background: user.status === 'Active' ? '#E6F9F0' : '#FEECEC',
-                                                color: user.status === 'Active' ? '#00B69B' : '#EE3636'
-                                            }}>
-                                            {user.status}
-                                        </span>
-                                    </td>
-                                    <td>{user.lastLogin}</td>
-                                    <td>
-                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                            <button
-                                                className="icon-btn"
-                                                onClick={() => handleAddEditAdmin(user)}
-                                                style={{ width: '32px', height: '32px' }}
-                                                title="Edit admin user"
-                                            >
-                                                <Edit2 size={16} />
-                                            </button>
-                                            {canDeleteAdmin && (
+                    {loading ? (
+                        <div style={{ padding: '2rem', textAlign: 'center' }}>
+                            <RefreshCw size={24} className="spinning" style={{ animation: 'spin 1s linear infinite' }} />
+                            <p>Loading users...</p>
+                        </div>
+                    ) : error ? (
+                        <div style={{ padding: '2rem', textAlign: 'center', color: '#EE3636' }}>
+                            <p>{error}</p>
+                            <button onClick={fetchData} style={{ marginTop: '1rem', padding: '0.5rem 1rem', background: 'var(--primary-color)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
+                                Retry
+                            </button>
+                        </div>
+                    ) : (
+                        <table className="simple-table" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 1rem', padding: '0 1.5rem' }}>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th>Last Login</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filteredAdmins.map(user => (
+                                    <tr key={user.id} style={{ background: 'white', boxShadow: '0 2px 5px rgba(0,0,0,0.02)' }}>
+                                        <td style={{ padding: '1rem', fontWeight: 'bold' }}>{user.name}</td>
+                                        <td>{user.email}</td>
+                                        <td><span className="badge" style={{ background: '#F3F4FF', color: 'var(--primary-color)' }}>{user.role}</span></td>
+                                        <td>
+                                            <span className={`badge ${user.status === 'Active' ? 'status-present' : 'status-absent'}`}
+                                                style={{
+                                                    background: user.status === 'Active' ? '#E6F9F0' : '#FEECEC',
+                                                    color: user.status === 'Active' ? '#00B69B' : '#EE3636'
+                                                }}>
+                                                {user.status}
+                                            </span>
+                                        </td>
+                                        <td>{user.lastLogin}</td>
+                                        <td>
+                                            <div style={{ display: 'flex', gap: '0.5rem' }}>
                                                 <button
                                                     className="icon-btn"
-                                                    onClick={() => handleDeleteAdmin(user.name, user.role)}
-                                                    style={{ width: '32px', height: '32px', color: '#EE3636' }}
-                                                    title="Delete admin user"
+                                                    onClick={() => handleAddEditAdmin(user)}
+                                                    style={{ width: '32px', height: '32px' }}
+                                                    title="Edit admin user"
                                                 >
-                                                    <Trash2 size={16} />
+                                                    <Edit2 size={16} />
                                                 </button>
-                                            )}
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                                                {canDeleteAdmin && (
+                                                    <button
+                                                        className="icon-btn"
+                                                        onClick={() => handleDeleteAdmin(user.id, user.name)}
+                                                        style={{ width: '32px', height: '32px', color: '#EE3636' }}
+                                                        title="Delete admin user"
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
                 </div>
             )}
 

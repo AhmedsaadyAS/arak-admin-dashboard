@@ -7,20 +7,35 @@ import { getClassSchedule, formatTime, getDayName } from '../../utils/scheduleUt
 import { calculateSubjectGrade, getPerformanceBreakdown, calculateOverallPerformance, assessmentsData } from '../../mock/assessments';
 import { getStudentInsights } from '../../utils/aiInsights';
 import { feesData } from '../../mock/fees';
-import { subjectsData } from '../../mock/subjects';
 import './StudentDetails.css';
 
 export default function StudentDetails() {
     const { id } = useParams();
     const navigate = useNavigate();
     const [student, setStudent] = useState(null);
+    const [schedules, setSchedules] = useState([]);
+    const [subjects, setSubjects] = useState([]);
+    const [teachers, setTeachers] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchStudent = async () => {
             try {
-                const data = await api.getStudentById(id);
-                setStudent(data);
+                const [studentData, subjectsData, teachersData] = await Promise.all([
+                    api.getStudentById(id),
+                    api.client.get('/subjects'),
+                    api.getTeachers()
+                ]);
+
+                setStudent(studentData);
+                setSubjects(subjectsData.data || []);
+                setTeachers(teachersData || []);
+
+                // Fetch live schedule data based on student's classId
+                if (studentData.classId) {
+                    const scheduleData = await api.client.get(`/schedules?classId=${studentData.classId}`);
+                    setSchedules(scheduleData.data || []);
+                }
             } catch (error) {
                 console.error("Failed to fetch student:", error);
             } finally {
@@ -53,7 +68,46 @@ export default function StudentDetails() {
 
     // New Data Integrations
     // Use optional chaining or defaults in case mock data doesn't match new API structure perfectly
-    const schedule = getClassSchedule(student.classId || 1);
+
+    // Transform live schedules into the format expected by the UI
+    const schedule = {};
+
+    schedules.forEach(s => {
+        // Map day names to indices (Sunday=0, Monday=1, etc.)
+        const dayMap = {
+            'Sunday': 0, 'Monday': 1, 'Tuesday': 2,
+            'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6
+        };
+
+        // Handle both format types found in database:
+        // Format 1: { day: "Monday", time: "08:00", subject: "Math" }
+        // Format 2: { dayOfWeek: 0, startTime: "08:00", subjectId: 1 }
+        let dayIndex;
+        if (s.day) {
+            dayIndex = dayMap[s.day];
+        } else if (s.dayOfWeek !== undefined) {
+            dayIndex = s.dayOfWeek;
+        } else {
+            return; // Skip if no day info
+        }
+
+        if (!schedule[dayIndex]) {
+            schedule[dayIndex] = [];
+        }
+
+        // Resolve subject and teacher names using loose equality (== instead of ===)
+        const subject = subjects.find(sub => sub.id == s.subjectId);
+        const teacher = teachers.find(t => t.id == s.teacherId);
+
+        schedule[dayIndex].push({
+            subjectName: subject?.name || s.subject || s.subjectName || 'Unknown Subject',
+            subjectColor: subject?.color || '#4D44B5',
+            teacherName: teacher?.name || 'Unknown Teacher',
+            startTime: s.time || s.startTime || '08:00',
+            room: s.room || 'N/A'
+        });
+    });
+
     const aiInsight = getStudentInsights(student);
     const overallPerformance = calculateOverallPerformance(studentIdNum);
 
@@ -139,7 +193,7 @@ export default function StudentDetails() {
 
                         <div className="performance-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem', marginTop: '1rem' }}>
                             {subjectIds.map(subjectId => {
-                                const subject = subjectsData.find(s => s.id === subjectId);
+                                const subject = subjects.find(s => s.id == subjectId);
                                 const grade = calculateSubjectGrade(studentIdNum, subjectId);
                                 const breakdown = getPerformanceBreakdown(studentIdNum, subjectId);
 

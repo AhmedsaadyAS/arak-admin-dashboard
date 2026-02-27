@@ -200,6 +200,42 @@ export const api = {
         }
     },
 
+    // --- Schedules ---
+
+    /**
+     * Get schedules by classId
+     * @param {string|number} classId
+     */
+    /**
+     * Get schedules by classId
+     * @param {string|number} classId
+     */
+    getSchedulesByClass: async (classId) => {
+        const response = await apiClient.get('/schedules', {
+            params: { classId: parseInt(classId, 10) }
+        });
+        return response.data || [];
+    },
+
+    /**
+     * Get schedules by teacherId
+     * @param {string|number} teacherId
+     */
+    getSchedulesByTeacher: async (teacherId) => {
+        const response = await apiClient.get('/schedules', {
+            params: { teacherId: parseInt(teacherId, 10) }
+        });
+        return response.data || [];
+    },
+
+    /**
+     * Get all schedules
+     */
+    getSchedules: async (params = {}) => {
+        const response = await apiClient.get('/schedules', { params });
+        return response.data || [];
+    },
+
     // --- Other ---
 
     getEvents: async () => {
@@ -210,5 +246,66 @@ export const api = {
     getFees: async () => {
         const response = await apiClient.get('/fees');
         return response.data;
+    },
+
+    // --- Users (Admin) ---
+
+    getUsers: async (params = {}) => {
+        const response = await apiClient.get('/users', { params });
+        return response.data || [];
+    },
+
+    getUserById: async (id) => {
+        const response = await apiClient.get(`/users/${id}`);
+        return response.data;
+    },
+
+    createUser: async (userData) => {
+        const response = await apiClient.post('/users', userData);
+        return response.data;
+    },
+
+    updateUser: async (id, userData) => {
+        const response = await apiClient.patch(`/users/${id}`, userData);
+        return response.data;
+    },
+
+    deleteUser: async (id) => {
+        const response = await apiClient.delete(`/users/${id}`);
+        return response.data;
+    },
+
+    // --- Parents ---
+
+    getParents: async (params = {}) => {
+        const response = await apiClient.get('/parents', { params });
+        return response.data || [];
+    },
+
+    getParentById: async (id) => {
+        const response = await apiClient.get(`/parents/${id}`);
+        return response.data;
+    },
+
+    createParent: async (parentData) => {
+        const response = await apiClient.post('/parents', parentData);
+        return response.data;
+    },
+
+    updateParent: async (id, parentData) => {
+        const response = await apiClient.patch(`/parents/${id}`, parentData);
+        return response.data;
+    },
+
+    deleteParent: async (id) => {
+        const response = await apiClient.delete(`/parents/${id}`);
+        return response.data;
+    },
+
+    // --- Roles ---
+
+    getRoles: async () => {
+        const response = await apiClient.get('/roles');
+        return response.data || [];
     }
 };

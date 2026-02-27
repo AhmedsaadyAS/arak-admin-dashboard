@@ -21,7 +21,7 @@ export const usersData = [
         id: 3,
         name: 'Siti Nurhaliza',
         email: 'siti@arak.com',
-        role: 'School Administrator',
+        role: 'Admin',
         roleId: 2,
         status: 'Active',
         lastLogin: '2024-03-20 08:00 AM'
@@ -30,8 +30,8 @@ export const usersData = [
         id: 4,
         name: 'Budi Santoso',
         email: 'budi@arak.com',
-        role: 'Registrar',
-        roleId: 3,
+        role: 'Users Admin',
+        roleId: 5,
         status: 'Active',
         lastLogin: '2024-03-18 02:30 PM'
     },
@@ -39,7 +39,7 @@ export const usersData = [
         id: 5,
         name: 'Devi Lestari',
         email: 'devi@arak.com',
-        role: 'Finance Administrator',
+        role: 'Fees Admin',
         roleId: 4,
         status: 'Active',
         lastLogin: '2024-03-20 11:00 AM'
@@ -48,9 +48,10 @@ export const usersData = [
         id: 6,
         name: 'Rudi Pratama',
         email: 'rudi@arak.com',
-        role: 'School Administrator',
-        roleId: 2,
+        role: 'Academic Admin',
+        roleId: 3,
         status: 'Inactive',
         lastLogin: '2024-02-15 03:00 PM'
     }
 ];
+

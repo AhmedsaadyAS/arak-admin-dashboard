@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import { ChevronUp, ChevronDown, Edit2, Trash2 } from 'lucide-react';
 import './DataTable.css';
 
@@ -127,3 +128,17 @@ export default function DataTable({
         </div>
     );
 }
+
+DataTable.propTypes = {
+    columns: PropTypes.arrayOf(PropTypes.shape({
+        key: PropTypes.string.isRequired,
+        label: PropTypes.string.isRequired,
+        sortable: PropTypes.bool,
+        render: PropTypes.func // Optional custom renderer
+    })).isRequired,
+    data: PropTypes.array.isRequired,
+    onEdit: PropTypes.func,
+    onDelete: PropTypes.func,
+    showActions: PropTypes.bool,
+    emptyMessage: PropTypes.string
+};

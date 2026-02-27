@@ -14,7 +14,7 @@ import StudentDetails from "./pages/Students/StudentDetails";
 import TeachersList from "./pages/Teachers/TeachersList";
 import TeacherDetails from "./pages/Teachers/TeacherDetails";
 import GradebookMonitor from "./pages/Evaluations/GradebookMonitor";
-import TaskMonitor from "./pages/Tasks/TaskMonitor";
+import TaskMonitor from "./components/TaskMonitor";
 import Events from "./pages/Events/Events";
 import Fees from "./pages/Fees/Fees";
 import Reports from "./pages/Reports/Reports";
@@ -25,6 +25,8 @@ import UserProfile from "./pages/User/UserProfile";
 import Settings from "./pages/Settings/Settings";
 import Schedule from "./pages/Schedule/Schedule";
 import ErrorBoundary from "./components/common/ErrorBoundary";
+import SheetManager from "./components/Control/SheetManager";
+import { PERMISSIONS } from "./config/permissions"; // Import permissions
 import "./styles/global.css";
 import "./styles/layout.css";
 
@@ -61,7 +63,7 @@ export default function App() {
                             } />
 
                             <Route path="/dashboard" element={
-                                <ProtectedRoute allowedRoles={['Super Admin', 'Admin', 'Fees Admin', 'Users Admin', 'Academic Admin']}>
+                                <ProtectedRoute requiredPermission={PERMISSIONS.DASHBOARD}>
                                     <Layout title="Dashboard">
                                         <Dashboard />
                                     </Layout>
@@ -69,7 +71,7 @@ export default function App() {
                             } />
 
                             <Route path="/students" element={
-                                <ProtectedRoute allowedRoles={['Super Admin', 'Admin', 'Users Admin', 'Academic Admin']}>
+                                <ProtectedRoute requiredPermission={PERMISSIONS.STUDENTS}>
                                     <Layout title="Students">
                                         <StudentsList />
                                     </Layout>
@@ -77,7 +79,7 @@ export default function App() {
                             } />
 
                             <Route path="/students/:id" element={
-                                <ProtectedRoute>
+                                <ProtectedRoute requiredPermission={PERMISSIONS.STUDENTS}>
                                     <Layout title="Student Details">
                                         <StudentDetails />
                                     </Layout>
@@ -85,7 +87,7 @@ export default function App() {
                             } />
 
                             <Route path="/teachers" element={
-                                <ProtectedRoute allowedRoles={['Super Admin', 'Admin', 'Users Admin', 'Academic Admin']}>
+                                <ProtectedRoute requiredPermission={PERMISSIONS.TEACHERS}>
                                     <Layout title="Teachers">
                                         <TeachersList />
                                     </Layout>
@@ -93,7 +95,7 @@ export default function App() {
                             } />
 
                             <Route path="/teachers/:id" element={
-                                <ProtectedRoute>
+                                <ProtectedRoute requiredPermission={PERMISSIONS.TEACHERS}>
                                     <Layout title="Teacher Details">
                                         <TeacherDetails />
                                     </Layout>
@@ -101,7 +103,7 @@ export default function App() {
                             } />
 
                             <Route path="/schedule" element={
-                                <ProtectedRoute>
+                                <ProtectedRoute requiredPermission={PERMISSIONS.SCHEDULE}>
                                     <Layout title="Schedule">
                                         <Schedule />
                                     </Layout>
@@ -109,7 +111,7 @@ export default function App() {
                             } />
 
                             <Route path="/events" element={
-                                <ProtectedRoute>
+                                <ProtectedRoute requiredPermission={PERMISSIONS.EVENTS}>
                                     <Layout title="Events">
                                         <Events />
                                     </Layout>
@@ -117,7 +119,7 @@ export default function App() {
                             } />
 
                             <Route path="/fees" element={
-                                <ProtectedRoute allowedRoles={['Super Admin', 'Admin', 'Fees Admin']}>
+                                <ProtectedRoute requiredPermission={PERMISSIONS.FEES}>
                                     <Layout title="Fees & Invoices">
                                         <Fees />
                                     </Layout>
@@ -125,7 +127,7 @@ export default function App() {
                             } />
 
                             <Route path="/reports" element={
-                                <ProtectedRoute>
+                                <ProtectedRoute requiredPermission={PERMISSIONS.REPORTS}>
                                     <Layout title="Reports & Analytics">
                                         <Reports />
                                     </Layout>
@@ -133,7 +135,7 @@ export default function App() {
                             } />
 
                             <Route path="/evaluations" element={
-                                <ProtectedRoute allowedRoles={['Super Admin', 'Admin', 'Academic Admin']}>
+                                <ProtectedRoute requiredPermission={PERMISSIONS.GRADEBOOK}>
                                     <Layout title="Gradebook Monitor">
                                         <GradebookMonitor />
                                     </Layout>
@@ -141,7 +143,7 @@ export default function App() {
                             } />
 
                             <Route path="/tasks" element={
-                                <ProtectedRoute allowedRoles={['Super Admin', 'Admin', 'Academic Admin']}>
+                                <ProtectedRoute requiredPermission={PERMISSIONS.TASKS}>
                                     <Layout title="Task Monitor">
                                         <TaskMonitor />
                                     </Layout>
@@ -149,7 +151,7 @@ export default function App() {
                             } />
 
                             <Route path="/activity" element={
-                                <ProtectedRoute>
+                                <ProtectedRoute requiredPermission={PERMISSIONS.ACTIVITY}>
                                     <Layout title="AI Analyser & Activity">
                                         <Activity />
                                     </Layout>
@@ -157,7 +159,7 @@ export default function App() {
                             } />
 
                             <Route path="/user" element={
-                                <ProtectedRoute allowedRoles={['Super Admin', 'Users Admin']}>
+                                <ProtectedRoute requiredPermission={PERMISSIONS.USER_MANAGEMENT}>
                                     <Layout title="User Management">
                                         <UserManagement />
                                     </Layout>
@@ -173,7 +175,7 @@ export default function App() {
                             } />
 
                             <Route path="/settings" element={
-                                <ProtectedRoute>
+                                <ProtectedRoute requiredPermission={PERMISSIONS.SETTINGS}>
                                     <Layout title="Settings">
                                         <Settings />
                                     </Layout>
@@ -181,9 +183,17 @@ export default function App() {
                             } />
 
                             <Route path="/chat" element={
-                                <ProtectedRoute>
+                                <ProtectedRoute requiredPermission={PERMISSIONS.CHAT}>
                                     <Layout title="Chat">
                                         <Chat />
+                                    </Layout>
+                                </ProtectedRoute>
+                            } />
+
+                            <Route path="/control/sheets" element={
+                                <ProtectedRoute requiredPermission={PERMISSIONS.CONTROL_SHEETS}>
+                                    <Layout title="Control Sheets">
+                                        <SheetManager />
                                     </Layout>
                                 </ProtectedRoute>
                             } />

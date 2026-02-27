@@ -8,29 +8,54 @@ export const evaluationService = {
 
     /**
      * Fetch grades for a specific class and subject.
+     * Optionally filter by assessmentType.
      * @param {string|number} classId 
-     * @param {string} subject 
+     * @param {string|number} subjectId 
+     * @param {string} [assessmentType]  optional filter
      */
-    getClassGrades: async (classId, subject) => {
+    getClassGrades: async (classId, subjectId, assessmentType = null) => {
         try {
-            // Strong Typing: Ensure ID is an integer for SQL compatibility
-            const numericClassId = parseInt(classId, 10);
-            if (isNaN(numericClassId)) throw new Error("Invalid Class ID");
+            const params = {
+                classId: parseInt(classId, 10),
+                subjectId: parseInt(subjectId, 10),
+            };
+            if (isNaN(params.classId)) throw new Error('Invalid Class ID');
+            if (isNaN(params.subjectId)) throw new Error('Invalid Subject ID');
 
-            // Mock Endpoint: In real backend, this would be GET /api/evaluations?classId=1&subject=Math
-            // For now, we simulate fetching all evaluations and filtering client-side if needed, 
-            // or assume the endpoint handles it.
-            const response = await api.client.get('/evaluations', {
-                params: {
-                    classId: numericClassId,
-                    subject: subject
-                }
-            });
+            if (assessmentType && assessmentType !== 'All') {
+                params.assessmentType = assessmentType;
+            }
 
-            return response.data;
+            const response = await api.client.get('/evaluations', { params });
+            const data = Array.isArray(response.data) ? response.data : response.data?.data || [];
+            return data;
         } catch (error) {
-            console.error("EvaluationService: Failed to fetch class grades", error);
-            throw error; // Re-throw to be handled by UI Error Boundary
+            console.error('EvaluationService: Failed to fetch class grades', error);
+            throw error;
+        }
+    },
+
+    /**
+     * Fetch ALL evaluations for a class (all subjects).
+     * Used for multi-scope exports.
+     * @param {string|number} classId
+     * @param {string} [assessmentType]  optional filter
+     */
+    getClassAllSubjects: async (classId, assessmentType = null) => {
+        try {
+            const params = { classId: parseInt(classId, 10) };
+            if (isNaN(params.classId)) throw new Error('Invalid Class ID');
+
+            if (assessmentType && assessmentType !== 'All') {
+                params.assessmentType = assessmentType;
+            }
+
+            const response = await api.client.get('/evaluations', { params });
+            const data = Array.isArray(response.data) ? response.data : response.data?.data || [];
+            return data;
+        } catch (error) {
+            console.error('EvaluationService: Failed to fetch all subjects', error);
+            return [];
         }
     },
 
@@ -47,7 +72,7 @@ export const evaluationService = {
             return response.data;
         } catch (error) {
             console.error("EvaluationService: Connection Failed", error);
-            return []; // Fail gracefully
+            return [];
         }
     },
 
@@ -58,12 +83,11 @@ export const evaluationService = {
      */
     setGradeLockStatus: async (classId, isLocked) => {
         try {
-            // Mocking a status update. 
-            // In a real DB, this might update a 'GradeLock' table.
-            console.log(`[Audit] Admin setting lock status for Class ${classId} to ${isLocked}`);
+            await api.client.patch(`/classes/${classId}`, { gradesLocked: isLocked });
             return { success: true, message: `Grades ${isLocked ? 'Locked' : 'Unlocked'}` };
         } catch (error) {
             throw new Error("Failed to update lock status");
         }
-    }
+    },
 };
+

@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { X, Save, AlertCircle } from 'lucide-react';
 import { api } from '../../services/api';
 import { detectTimeConflicts } from '../../utils/scheduleUtils';
 
-export default function LessonForm({ isOpen, onClose, onSave, initialData, allLessons }) {
+export default function LessonForm({ isOpen, onClose, onSave, initialData = null, allLessons = [] }) {
     const [classes, setClasses] = useState([]);
     const [subjects, setSubjects] = useState([]);
     const [teachers, setTeachers] = useState([]);
+    const [availableTeachers, setAvailableTeachers] = useState([]); // ✅ Filtered by subject
     const [loading, setLoading] = useState(true);
 
     const [formData, setFormData] = useState({
@@ -19,26 +21,27 @@ export default function LessonForm({ isOpen, onClose, onSave, initialData, allLe
         room: ''
     });
     const [error, setError] = useState(null);
-    const [debugConflicts, setDebugConflicts] = useState([]);
 
     // Fetch dropdown data
     useEffect(() => {
         const fetchData = async () => {
             try {
+                // ✅ Fetch from normalized endpoints
                 const [classesRes, subjectsRes, teachersRes] = await Promise.all([
                     api.client.get('/classes'),
-                    api.client.get('/subjects'),
+                    api.client.get('/subjects'), // ✅ NEW: Use /subjects endpoint
                     api.getTeachers()
                 ]);
+
                 setClasses(classesRes.data || []);
-                setSubjects(subjectsRes.data || []);
+                setSubjects(subjectsRes.data || []); // ✅ Direct subject data
                 setTeachers(teachersRes);
 
                 // Set defaults if creating new and data loaded
                 if (!initialData && classesRes.data?.length > 0) {
                     setFormData(prev => ({
                         ...prev,
-                        classId: classesRes.data[0].id.toString(),
+                        classId: classesRes.data[0].id.toString(), // Keep as string for form
                         subjectId: subjectsRes.data?.[0]?.id.toString() || '',
                         teacherId: teachersRes?.[0]?.id.toString() || ''
                     }));
@@ -54,7 +57,35 @@ export default function LessonForm({ isOpen, onClose, onSave, initialData, allLe
         if (isOpen) {
             fetchData();
         }
-    }, [isOpen]);
+    }, [isOpen, initialData]);
+
+    // ✅ Filter teachers when subject changes
+    useEffect(() => {
+        if (formData.subjectId && teachers.length > 0) {
+            // Convert to number for comparison (form stores as string)
+            const selectedSubjectId = Number(formData.subjectId);
+
+            // Filter teachers who teach this subject
+            const filtered = teachers.filter(t => t.subjectId === selectedSubjectId);
+            setAvailableTeachers(filtered);
+
+            // Auto-select first available teacher if current selection is invalid
+            if (filtered.length > 0) {
+                const currentTeacherId = Number(formData.teacherId);
+                const isCurrentValid = filtered.some(t => t.id === currentTeacherId);
+
+                if (!isCurrentValid) {
+                    setFormData(prev => ({
+                        ...prev,
+                        teacherId: filtered[0].id.toString()
+                    }));
+                }
+            }
+        } else {
+            // Show all teachers if no subject selected
+            setAvailableTeachers(teachers);
+        }
+    }, [formData.subjectId, teachers, formData.teacherId]);
 
     useEffect(() => {
         if (initialData) {
@@ -68,9 +99,19 @@ export default function LessonForm({ isOpen, onClose, onSave, initialData, allLe
                 endTime: initialData.endTime,
                 room: initialData.room
             });
+        } else if (!isOpen) {
+            // Reset form when modal closes
+            setFormData({
+                classId: '',
+                subjectId: '',
+                teacherId: '',
+                dayOfWeek: 0,
+                startTime: '08:00',
+                endTime: '09:00',
+                room: ''
+            });
         }
         setError(null);
-        setDebugConflicts([]);
     }, [initialData, isOpen]);
 
     if (!isOpen) return null;
@@ -92,12 +133,16 @@ export default function LessonForm({ isOpen, onClose, onSave, initialData, allLe
 
         const newLesson = {
             ...formData,
-            id: initialData ? initialData.id : Date.now(),
             classId: parseInt(formData.classId),
             subjectId: parseInt(formData.subjectId),
             teacherId: parseInt(formData.teacherId),
             dayOfWeek: parseInt(formData.dayOfWeek)
         };
+
+        // Add ID only if editing (for conflict detection)
+        if (initialData) {
+            newLesson.id = initialData.id;
+        }
 
         // Conflict Detection
         const otherLessons = initialData
@@ -105,7 +150,6 @@ export default function LessonForm({ isOpen, onClose, onSave, initialData, allLe
             : allLessons;
 
         const conflicts = detectTimeConflicts([...otherLessons, newLesson]);
-        setDebugConflicts(conflicts);
 
         const relevantConflict = conflicts.find(c =>
             c.lesson1.id === newLesson.id || c.lesson2.id === newLesson.id
@@ -148,8 +192,8 @@ export default function LessonForm({ isOpen, onClose, onSave, initialData, allLe
                     )}
 
                     <div className="form-group">
-                        <label>Class</label>
-                        <select name="classId" value={formData.classId} onChange={handleChange} required disabled={loading}>
+                        <label htmlFor="lesson-classId">Class</label>
+                        <select id="lesson-classId" name="classId" value={formData.classId} onChange={handleChange} required disabled={loading}>
                             {classes.map(c => (
                                 <option key={c.id} value={c.id}>{c.name}</option>
                             ))}
@@ -157,8 +201,8 @@ export default function LessonForm({ isOpen, onClose, onSave, initialData, allLe
                     </div>
 
                     <div className="form-group">
-                        <label>Subject</label>
-                        <select name="subjectId" value={formData.subjectId} onChange={handleChange} required disabled={loading}>
+                        <label htmlFor="lesson-subjectId">Subject</label>
+                        <select id="lesson-subjectId" name="subjectId" value={formData.subjectId} onChange={handleChange} required disabled={loading}>
                             {subjects.map(s => (
                                 <option key={s.id} value={s.id}>{s.name}</option>
                             ))}
@@ -166,17 +210,17 @@ export default function LessonForm({ isOpen, onClose, onSave, initialData, allLe
                     </div>
 
                     <div className="form-group">
-                        <label>Teacher</label>
-                        <select name="teacherId" value={formData.teacherId} onChange={handleChange} required disabled={loading}>
-                            {teachers.map(t => (
+                        <label htmlFor="lesson-teacherId">Teacher</label>
+                        <select id="lesson-teacherId" name="teacherId" value={formData.teacherId} onChange={handleChange} required disabled={loading}>
+                            {availableTeachers.map(t => (
                                 <option key={t.id} value={t.id}>{t.name}</option>
                             ))}
                         </select>
                     </div>
 
                     <div className="form-group">
-                        <label>Day</label>
-                        <select name="dayOfWeek" value={formData.dayOfWeek} onChange={handleChange} required>
+                        <label htmlFor="lesson-dayOfWeek">Day</label>
+                        <select id="lesson-dayOfWeek" name="dayOfWeek" value={formData.dayOfWeek} onChange={handleChange} required>
                             {days.map(d => (
                                 <option key={d.value} value={d.value}>{d.label}</option>
                             ))}
@@ -185,18 +229,18 @@ export default function LessonForm({ isOpen, onClose, onSave, initialData, allLe
 
                     <div className="form-row">
                         <div className="form-group">
-                            <label>Start Time</label>
-                            <input type="time" name="startTime" value={formData.startTime} onChange={handleChange} required />
+                            <label htmlFor="lesson-startTime">Start Time</label>
+                            <input id="lesson-startTime" type="time" name="startTime" value={formData.startTime} onChange={handleChange} required />
                         </div>
                         <div className="form-group">
-                            <label>End Time</label>
-                            <input type="time" name="endTime" value={formData.endTime} onChange={handleChange} required />
+                            <label htmlFor="lesson-endTime">End Time</label>
+                            <input id="lesson-endTime" type="time" name="endTime" value={formData.endTime} onChange={handleChange} required />
                         </div>
                     </div>
 
                     <div className="form-group">
-                        <label>Room</label>
-                        <input type="text" name="room" value={formData.room} onChange={handleChange} required placeholder="e.g. Room 101" />
+                        <label htmlFor="lesson-room">Room</label>
+                        <input id="lesson-room" type="text" name="room" value={formData.room} onChange={handleChange} required placeholder="e.g. Room 101" />
                     </div>
 
                     <div className="modal-actions">
@@ -212,3 +256,20 @@ export default function LessonForm({ isOpen, onClose, onSave, initialData, allLe
         </div>
     );
 }
+
+LessonForm.propTypes = {
+    isOpen: PropTypes.bool.isRequired,
+    onClose: PropTypes.func.isRequired,
+    onSave: PropTypes.func.isRequired,
+    initialData: PropTypes.shape({
+        id: PropTypes.number,
+        classId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+        subjectId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+        teacherId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+        dayOfWeek: PropTypes.number,
+        startTime: PropTypes.string,
+        endTime: PropTypes.string,
+        room: PropTypes.string
+    }),
+    allLessons: PropTypes.array
+};

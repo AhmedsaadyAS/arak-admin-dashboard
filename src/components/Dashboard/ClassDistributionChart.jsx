@@ -40,10 +40,10 @@ const ClassDistributionChart = ({ students = [] }) => {
 
     return (
         <ChartErrorBoundary>
-            <div className="w-full h-[350px] bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <div style={{ width: '100%', height: '350px', background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #f3f4f6' }}>
                 <h3 className="text-lg font-bold text-gray-800 mb-6">Students per Class</h3>
 
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height={250}>
                     <BarChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                         <XAxis

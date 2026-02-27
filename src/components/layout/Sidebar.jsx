@@ -13,111 +13,116 @@ import {
     Settings as SettingsIcon,
     Shield,
     Award,
-    BookOpen
+    BookOpen,
+    FileSpreadsheet
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { PERMISSIONS } from "../../config/permissions";
 import logo from "../../assets/logo.png";
 import "../../styles/layout.css";
 
-// Define Menu Items with Role Permissions
-// Note: 'Super Admin' has implicit access to EVERYTHING, so we don't need to list it everywhere 
-// if we handle the logic correctly. But explicit is safer.
+// Define Menu Items with Permission Requirements
 const menuItems = [
     {
         key: "dashboard",
         label: "Dashboard",
         path: "/dashboard",
         icon: <LayoutDashboard size={20} />,
-        allowedRoles: ['Super Admin', 'Admin', 'Fees Admin', 'Users Admin', 'Academic Admin']
+        permission: PERMISSIONS.DASHBOARD
     },
     {
         key: "students",
         label: "Students",
         path: "/students",
         icon: <Users size={20} />,
-        allowedRoles: ['Super Admin', 'Admin', 'Users Admin', 'Academic Admin']
+        permission: PERMISSIONS.STUDENTS
     },
     {
         key: "teachers",
         label: "Teachers",
         path: "/teachers",
         icon: <GraduationCap size={20} />,
-        allowedRoles: ['Super Admin', 'Admin', 'Users Admin', 'Academic Admin']
+        permission: PERMISSIONS.TEACHERS
     },
     {
         key: "schedule",
         label: "Schedule",
         path: "/schedule",
         icon: <CalendarDays size={20} />,
-        allowedRoles: ['Super Admin', 'Admin', 'Academic Admin']
+        permission: PERMISSIONS.SCHEDULE
     },
     {
         key: "events",
         label: "Event",
         path: "/events",
         icon: <CalendarDays size={20} />,
-        allowedRoles: ['Super Admin', 'Admin', 'Academic Admin']
+        permission: PERMISSIONS.EVENTS
     },
     {
         key: "fees",
         label: "Fees",
         path: "/fees",
         icon: <CreditCard size={20} />,
-        allowedRoles: ['Super Admin', 'Fees Admin']
+        permission: PERMISSIONS.FEES
     },
     {
         key: "reports",
         label: "Reports",
         path: "/reports",
         icon: <BarChart2 size={20} />,
-        allowedRoles: ['Super Admin', 'Admin', 'Academic Admin', 'Fees Admin']
+        permission: PERMISSIONS.REPORTS
     },
     {
         key: "evaluations",
         label: "Gradebook",
         path: "/evaluations",
         icon: <Award size={20} />,
-        allowedRoles: ['Super Admin', 'Admin', 'Academic Admin']
+        permission: PERMISSIONS.GRADEBOOK
     },
     {
         key: "tasks",
         label: "Task Monitor",
         path: "/tasks",
         icon: <BookOpen size={20} />,
-        allowedRoles: ['Super Admin', 'Admin', 'Academic Admin']
+        permission: PERMISSIONS.TASKS
     },
     {
         key: "user",
         label: "User Management",
         path: "/user",
         icon: <User size={20} />,
-        allowedRoles: ['Super Admin', 'Users Admin']
+        permission: PERMISSIONS.USER_MANAGEMENT
     },
     {
         key: "chat",
         label: "Chat",
         path: "/chat",
         icon: <MessageSquare size={20} />,
-        allowedRoles: ['Super Admin', 'Admin', 'Users Admin']
+        permission: PERMISSIONS.CHAT
     },
     {
         key: "activity",
         label: "Latest Activity",
         path: "/activity",
         icon: <Activity size={20} />,
-        allowedRoles: ['Super Admin']
+        permission: PERMISSIONS.ACTIVITY
+    },
+    {
+        key: "control-sheets",
+        label: "Control Sheets",
+        path: "/control/sheets",
+        icon: <FileSpreadsheet size={20} />,
+        permission: PERMISSIONS.CONTROL_SHEETS
     },
 ];
 
 export default function Sidebar() {
-    const { user } = useAuth();
+    const { user, hasPermission } = useAuth();
 
-    // Filtering Logic
+    // Filter menu items based on user permissions
     const filteredItems = menuItems.filter(item => {
         if (!user) return false;
-        if (user.role === 'Super Admin') return true; // Super Admin sees all
-        if (!item.allowedRoles) return true; // Public items (if any)
-        return item.allowedRoles.includes(user.role);
+        return hasPermission(item.permission);
     });
 
     return (

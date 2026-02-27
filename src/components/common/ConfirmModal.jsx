@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { AlertTriangle, X } from 'lucide-react';
 import './ConfirmModal.css';
 
@@ -59,3 +60,14 @@ export default function ConfirmModal({
         </div>
     );
 }
+
+ConfirmModal.propTypes = {
+    isOpen: PropTypes.bool,
+    title: PropTypes.string,
+    message: PropTypes.string,
+    confirmText: PropTypes.string,
+    cancelText: PropTypes.string,
+    onConfirm: PropTypes.func.isRequired,
+    onCancel: PropTypes.func.isRequired,
+    variant: PropTypes.oneOf(['danger', 'warning', 'info'])
+};

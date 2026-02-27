@@ -99,6 +99,30 @@
     font-weight: 600;
 }
 
+.status-badge {
+    display: inline-block;
+    padding: 0.35rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.status-pending {
+    background: #FFF4E5;
+    color: #FB7D5B;
+}
+
+.status-completed {
+    background: #E8F5E9;
+    color: #00B69B;
+}
+
+.status-overdue {
+    background: #FFEBEE;
+    color: #EF4444;
+}
+
 .description-section {
     background: #F9FAFB;
     border-radius: 12px;

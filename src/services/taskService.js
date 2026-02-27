@@ -1,9 +1,11 @@
 import { api } from './api';
+import { ensureNumericId, normalizeId } from '../utils/idValidation';
 
 /**
  * Task Service
  * Handles homework/task monitoring operations for Admins
  * Mirrors expected ASP.NET Core structure
+ * Now with centralized ID validation
  */
 export const taskService = {
 
@@ -13,10 +15,34 @@ export const taskService = {
      */
     getAllTasks: async (params = {}) => {
         try {
-            const response = await api.client.get('/tasks', { params });
+            // Normalize any ID parameters
+            const normalizedParams = { ...params };
+            if (params.teacherId) {
+                normalizedParams.teacherId = normalizeId(params.teacherId);
+            }
+            if (params.classId) {
+                normalizedParams.classId = normalizeId(params.classId);
+            }
+
+            const response = await api.client.get('/tasks', { params: normalizedParams });
             return response.data;
         } catch (error) {
             console.error("TaskService: Failed to fetch tasks", error);
+            throw error;
+        }
+    },
+
+    /**
+     * Get a single task by ID
+     * @param {number|string} id 
+     */
+    getTaskById: async (id) => {
+        try {
+            const numericId = ensureNumericId(id, 'taskId');
+            const response = await api.client.get(`/tasks/${numericId}`);
+            return response.data;
+        } catch (error) {
+            console.error("TaskService: Failed to fetch task", error);
             throw error;
         }
     },
@@ -27,9 +53,7 @@ export const taskService = {
      */
     getTasksByTeacher: async (teacherId) => {
         try {
-            const numericId = parseInt(teacherId, 10);
-            if (isNaN(numericId)) throw new Error("Invalid Teacher ID");
-
+            const numericId = ensureNumericId(teacherId, 'teacherId');
             const response = await api.client.get('/tasks', {
                 params: { teacherId: numericId }
             });
@@ -46,7 +70,7 @@ export const taskService = {
      */
     getTasksByClass: async (classId) => {
         try {
-            const numericId = parseInt(classId, 10);
+            const numericId = ensureNumericId(classId, 'classId');
             const response = await api.client.get('/tasks', {
                 params: { classId: numericId }
             });
@@ -58,16 +82,65 @@ export const taskService = {
     },
 
     /**
+     * Create a new task
+     * @param {Object} taskData - { teacherId, title, description, dueDate, status }
+     */
+    createTask: async (taskData) => {
+        try {
+            // Validate and normalize IDs
+            const normalizedData = { ...taskData };
+            if (taskData.teacherId) {
+                normalizedData.teacherId = ensureNumericId(taskData.teacherId, 'teacherId');
+            }
+            if (taskData.classId) {
+                normalizedData.classId = ensureNumericId(taskData.classId, 'classId');
+            }
+
+            const response = await api.client.post('/tasks', normalizedData);
+            return response.data;
+        } catch (error) {
+            console.error("TaskService: Failed to create task", error);
+            throw error;
+        }
+    },
+
+    /**
      * Delete inappropriate task (Admin quality control)
      * @param {number|string} id 
      */
     deleteTask: async (id) => {
         try {
-            const numericId = parseInt(id, 10);
+            const numericId = ensureNumericId(id, 'taskId');
             const response = await api.client.delete(`/tasks/${numericId}`);
             return response.data;
         } catch (error) {
             console.error("TaskService: Failed to delete task", error);
+            throw error;
+        }
+    },
+
+    /**
+     * Update a task
+     * @param {number|string} id 
+     * @param {Object} updates 
+     */
+    updateTask: async (id, updates) => {
+        try {
+            const numericId = ensureNumericId(id, 'taskId');
+
+            // Normalize any ID fields in updates
+            const normalizedUpdates = { ...updates };
+            if (updates.teacherId) {
+                normalizedUpdates.teacherId = ensureNumericId(updates.teacherId, 'teacherId');
+            }
+            if (updates.classId) {
+                normalizedUpdates.classId = ensureNumericId(updates.classId, 'classId');
+            }
+
+            const response = await api.client.patch(`/tasks/${numericId}`, normalizedUpdates);
+            return response.data;
+        } catch (error) {
+            console.error("TaskService: Failed to update task", error);
             throw error;
         }
     },

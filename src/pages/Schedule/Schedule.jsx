@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Users, Clock, MapPin, ChevronLeft, ChevronRight, Plus, Edit2, Trash2 } from 'lucide-react';
-import { classesData } from '../../mock/classes';
-import { teachersData } from '../../mock/teachers';
-import { subjectsData } from '../../mock/subjects';
 import { getClassSchedule, getTeacherSchedule, getDayName, formatTime } from '../../utils/scheduleUtils';
 import LessonForm from '../../components/schedule/LessonForm';
 import { scheduleService } from '../../services/scheduleService';
 import { useToast } from '../../context/ToastContext';
+import { api } from '../../services/api';
 import './Schedule.css';
 
 export default function Schedule() {
@@ -21,25 +19,75 @@ export default function Schedule() {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingLesson, setEditingLesson] = useState(null);
 
-    // Fetch lessons on mount
+    // ✅ State for dropdown data (fetched from API)
+    const [classes, setClasses] = useState([]);
+    const [teachers, setTeachers] = useState([]);
+    const [subjects, setSubjects] = useState([]);
+
+    // Fetch all data on mount
     useEffect(() => {
-        fetchLessons();
+        fetchAllData();
     }, []);
+
+    const fetchAllData = async () => {
+        try {
+            const [lessonsData, classesData, teachersData, subjectsData] = await Promise.all([
+                scheduleService.getAllSchedules(),
+                api.client.get('/classes'),
+                api.getTeachers(),
+                api.client.get('/subjects')
+            ]);
+
+            // Normalize lesson IDs
+            const normalizedLessons = lessonsData.map(lesson => ({
+                ...lesson,
+                id: Number(lesson.id),
+                classId: Number(lesson.classId),
+                teacherId: Number(lesson.teacherId),
+                subjectId: Number(lesson.subjectId),
+                dayOfWeek: Number(lesson.dayOfWeek)
+            }));
+
+            setLessons(normalizedLessons);
+            setClasses(classesData.data || []);
+            setTeachers(teachersData || []);
+            setSubjects(subjectsData.data || []);
+
+            // Set initial selectedId to first class/teacher
+            if (viewMode === 'class' && classesData.data?.length > 0) {
+                setSelectedId(classesData.data[0].id);
+            } else if (viewMode === 'teacher' && teachersData?.length > 0) {
+                setSelectedId(teachersData[0].id);
+            }
+        } catch (error) {
+            console.error("Failed to fetch data", error);
+            showToast('error', 'Failed to load schedule data');
+        }
+    };
 
     const fetchLessons = async () => {
         try {
             const data = await scheduleService.getAllSchedules();
-            setLessons(data);
+            const normalizedLessons = data.map(lesson => ({
+                ...lesson,
+                id: Number(lesson.id),
+                classId: Number(lesson.classId),
+                teacherId: Number(lesson.teacherId),
+                subjectId: Number(lesson.subjectId),
+                dayOfWeek: Number(lesson.dayOfWeek)
+            }));
+            setLessons(normalizedLessons);
         } catch (error) {
             console.error("Failed to fetch lessons", error);
             showToast('error', 'Failed to load schedule');
         }
     };
 
+
     // Get schedule based on view mode and current lessons state
     const schedule = viewMode === 'class'
-        ? getClassSchedule(selectedId, lessons)
-        : getTeacherSchedule(selectedId, lessons);
+        ? getClassSchedule(selectedId, lessons, teachers, subjects)
+        : getTeacherSchedule(selectedId, lessons, teachers, subjects);
 
     const weekDays = [0, 1, 2, 3, 4]; // Sun-Thu
 
@@ -80,25 +128,18 @@ export default function Schedule() {
     const handleSaveLesson = async (lesson) => {
         try {
             if (editingLesson) {
-                // Update implementation would go here (omitted for brevity as user focused on Add)
-                // For now, let's treat update as add in this mocked context or implement update in service
-                // But to satisfy "Add Lesson Logic", we use addLesson for new ones
-
-                // Note: The prompt specifically asked for "Add Lesson logic" sync.
-                // Assuming we just want to save it. 
-                // Since scheduleService.addLesson is for adding, let's assume update logic is similar or simpler.
-                // For full correctness, let's just refresh list.
-
-                console.warn("Update not fully implemented in this step, refreshing list");
-                await fetchLessons();
+                // Update existing lesson
+                await scheduleService.updateSchedule(editingLesson.id, lesson, showToast);
+                await fetchLessons(); // Refresh to show updated data
             } else {
-                // Feature 3: Schedule-Teacher Auto-Sync Logic is inside scheduleService.addLesson
+                // Add new lesson
                 await scheduleService.addLesson(lesson, showToast);
                 await fetchLessons(); // Refresh to get new ID
             }
             setIsFormOpen(false);
         } catch (error) {
-            // Error handled in service or here
+            // Error handled in service
+            console.error("Save lesson error:", error);
         }
     };
 
@@ -106,7 +147,6 @@ export default function Schedule() {
 
     const handleUploadSchedule = (file) => {
         // Mock upload logic
-        console.log("Uploading file:", file.name);
         alert(`Schedule imported successfully from ${file.name}!\n\n(This is a mock action. In a real app, this would parse the CSV/Excel file.)`);
         setIsUploadModalOpen(false);
         // Simulate refresh
@@ -134,13 +174,13 @@ export default function Schedule() {
                 <div className="view-toggle">
                     <button
                         className={`toggle-btn ${viewMode === 'class' ? 'active' : ''}`}
-                        onClick={() => { setViewMode('class'); setSelectedId(classesData[0].id); }}
+                        onClick={() => { setViewMode('class'); if (classes[0]) setSelectedId(classes[0].id); }}
                     >
                         <Users size={18} /> Class View
                     </button>
                     <button
                         className={`toggle-btn ${viewMode === 'teacher' ? 'active' : ''}`}
-                        onClick={() => { setViewMode('teacher'); setSelectedId(teachersData[0].id); }}
+                        onClick={() => { setViewMode('teacher'); if (teachers[0]) setSelectedId(teachers[0].id); }}
                     >
                         <Calendar size={18} /> Teacher View
                     </button>
@@ -153,7 +193,7 @@ export default function Schedule() {
                             onChange={(e) => setSelectedId(parseInt(e.target.value))}
                             className="schedule-select"
                         >
-                            {classesData.map(cls => (
+                            {classes.map(cls => (
                                 <option key={cls.id} value={cls.id}>{cls.name}</option>
                             ))}
                         </select>
@@ -163,7 +203,7 @@ export default function Schedule() {
                             onChange={(e) => setSelectedId(parseInt(e.target.value))}
                             className="schedule-select"
                         >
-                            {teachersData.map(teacher => (
+                            {teachers.map(teacher => (
                                 <option key={teacher.id} value={teacher.id}>{teacher.name}</option>
                             ))}
                         </select>
@@ -239,7 +279,7 @@ export default function Schedule() {
 
             {/* Legend */}
             <div className="schedule-legend">
-                {subjectsData.map(subject => (
+                {subjects.map(subject => (
                     <div key={subject.id} className="legend-item">
                         <span className="color-dot" style={{ background: subject.color }}></span>
                         <span>{subject.name}</span>

@@ -66,7 +66,14 @@ export default function Activity() {
                             </div>
                         </div>
                         <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem' }}>
-                            <input type="text" placeholder="Type a message..." style={{ flex: 1, padding: '0.5rem', borderRadius: '20px', border: '1px solid #e5e7eb', outline: 'none' }} />
+                            <input
+                                id="activity-message"
+                                name="message"
+                                type="text"
+                                placeholder="Type a message..."
+                                autoComplete="off"
+                                style={{ flex: 1, padding: '0.5rem', borderRadius: '20px', border: '1px solid #e5e7eb', outline: 'none' }}
+                            />
                             <button style={{ background: 'var(--primary-color)', color: 'white', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><MessageSquare size={16} /></button>
                         </div>
                     </div>

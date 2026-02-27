@@ -1,4 +1,5 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback, useMemo } from 'react';
+import { getPermissionsForRole, roleHasPermission, PERMISSIONS } from '../config/permissions';
 
 const AuthContext = createContext(null);
 
@@ -8,6 +9,14 @@ const USER_KEY = 'arak_user';
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+
+    const logout = useCallback(() => {
+        setUser(null);
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(USER_KEY);
+        sessionStorage.removeItem(TOKEN_KEY);
+        sessionStorage.removeItem(USER_KEY);
+    }, []);
 
     // Initialize auth state from localStorage on mount
     useEffect(() => {
@@ -23,7 +32,7 @@ export const AuthProvider = ({ children }) => {
             }
         }
         setLoading(false);
-    }, []);
+    }, [logout]);
 
     const login = (userData, token, rememberMe = false) => {
         setUser(userData);
@@ -35,14 +44,6 @@ export const AuthProvider = ({ children }) => {
             sessionStorage.setItem(TOKEN_KEY, token);
             sessionStorage.setItem(USER_KEY, JSON.stringify(userData));
         }
-    };
-
-    const logout = () => {
-        setUser(null);
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(USER_KEY);
-        sessionStorage.removeItem(TOKEN_KEY);
-        sessionStorage.removeItem(USER_KEY);
     };
 
     const getToken = () => {
@@ -64,6 +65,33 @@ export const AuthProvider = ({ children }) => {
         return allowedRoles.includes(user.role);
     };
 
+    /**
+     * Check if user has a specific permission
+     * @param {string|string[]} permission - Permission or array of permissions to check
+     * @returns {boolean} - True if user has the permission(s)
+     */
+    const hasPermission = useCallback((permission) => {
+        if (!user || !user.role) return false;
+
+        // Super Admin has all permissions
+        if (user.role === 'Super Admin') return true;
+
+        // If array, check if user has at least one of the permissions
+        if (Array.isArray(permission)) {
+            return permission.some(p => roleHasPermission(user.role, p));
+        }
+
+        return roleHasPermission(user.role, permission);
+    }, [user]);
+
+    /**
+     * Get all permissions for the current user's role
+     */
+    const userPermissions = useMemo(() => {
+        if (!user || !user.role) return [];
+        return getPermissionsForRole(user.role);
+    }, [user]);
+
     const value = {
         user,
         loading,
@@ -71,7 +99,10 @@ export const AuthProvider = ({ children }) => {
         logout,
         getToken,
         isAuthenticated,
-        hasRole
+        hasRole,
+        hasPermission,
+        userPermissions,
+        PERMISSIONS  // Export permission constants for components
     };
 
     return (

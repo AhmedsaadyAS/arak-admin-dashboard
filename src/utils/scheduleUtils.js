@@ -1,15 +1,14 @@
 // Schedule utility functions
-import { lessonsData } from '../mock/lessons';
-import { subjectsData } from '../mock/subjects';
-import { teachersData } from '../mock/teachers';
 
 /**
  * Get weekly schedule for a specific class
  * @param {number} classId - The class ID
- * @param {Array} lessons - Lessons data (optional, defaults to lessonsData)
- * @returns {Object} Schedule organized by day of week
+ * @param {Array} lessons - Lessons data from API
+ * @param {Array} teachers - Teachers data (for teacher name lookup)
+ * @param {Array} subjects - Subjects data (for subject name/color lookup)
+ * @returns {Object} Schedule organized by day of week (0=Sun…4=Thu)
  */
-export function getClassSchedule(classId, lessons = lessonsData) {
+export function getClassSchedule(classId, lessons = [], teachers = [], subjects = []) {
     const classLessons = lessons.filter(lesson => lesson.classId === classId);
 
     // Group by day of week
@@ -24,8 +23,9 @@ export function getClassSchedule(classId, lessons = lessonsData) {
     };
 
     classLessons.forEach(lesson => {
-        const subject = subjectsData.find(s => s.id === lesson.subjectId);
-        const teacher = teachersData.find(t => t.id === lesson.teacherId);
+        // Use == for ID comparison to handle type mismatch (number vs string)
+        const subject = subjects.find(s => s.id == lesson.subjectId);
+        const teacher = teachers.find(t => t.id == lesson.teacherId);
 
         // SAFEGUARD: Only push if the day exists (0-6)
         if (schedule[lesson.dayOfWeek]) {
@@ -50,9 +50,11 @@ export function getClassSchedule(classId, lessons = lessonsData) {
  * Get weekly schedule for a specific teacher
  * @param {number} teacherId - The teacher ID
  * @param {Array} lessons - Lessons data (optional, defaults to lessonsData)
+ * @param {Array} teachers - Teachers data (not used in teacher view but kept for consistency)
+ * @param {Array} subjects - Subjects data (required for subject name/color lookup)
  * @returns {Object} Schedule organized by day of week
  */
-export function getTeacherSchedule(teacherId, lessons = lessonsData) {
+export function getTeacherSchedule(teacherId, lessons = [], teachers = [], subjects = []) {
     const teacherLessons = lessons.filter(lesson => lesson.teacherId === teacherId);
 
     // Group by day of week
@@ -67,7 +69,8 @@ export function getTeacherSchedule(teacherId, lessons = lessonsData) {
     };
 
     teacherLessons.forEach(lesson => {
-        const subject = subjectsData.find(s => s.id === lesson.subjectId);
+        // Use == for ID comparison to handle type mismatch (number vs string)
+        const subject = subjects.find(s => s.id == lesson.subjectId);
 
         // SAFEGUARD: Only push if the day exists (0-6)
         if (schedule[lesson.dayOfWeek]) {
@@ -92,7 +95,7 @@ export function getTeacherSchedule(teacherId, lessons = lessonsData) {
  * @param {Array} lessons - Lessons data
  * @returns {Array} Array of conflicts
  */
-export function detectTimeConflicts(lessons = lessonsData) {
+export function detectTimeConflicts(lessons = []) {
     const conflicts = [];
 
     // Group lessons by day
@@ -183,7 +186,7 @@ export function formatTime(time) {
  * @param {Array} lessons - Lessons data
  * @returns {Array} Sorted array of unique time slots
  */
-export function getTimeSlots(lessons = lessonsData) {
+export function getTimeSlots(lessons = []) {
     const slots = new Set();
     lessons.forEach(lesson => {
         slots.add(lesson.startTime);

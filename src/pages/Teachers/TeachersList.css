@@ -78,6 +78,7 @@
     align-items: center;
     gap: 0.5rem;
     white-space: nowrap;
+    min-width: fit-content;
     transition: all 0.2s;
 }
 

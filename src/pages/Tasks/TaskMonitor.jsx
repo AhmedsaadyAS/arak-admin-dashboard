@@ -108,9 +108,9 @@ export default function TaskMonitor() {
 
     // Status options
     const statusOptions = [
-        { value: 'pending', label: 'Pending' },
-        { value: 'completed', label: 'Completed' },
-        { value: 'overdue', label: 'Overdue' }
+        { value: 'Pending', label: 'Pending' },
+        { value: 'Completed', label: 'Completed' },
+        { value: 'Overdue', label: 'Overdue' }
     ];
 
     // Table columns

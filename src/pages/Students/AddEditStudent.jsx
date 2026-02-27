@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Save, X, Upload } from 'lucide-react';
+import { api } from '../../services/api';
 import '../../styles/layout.css';
 import '../Dashboard/dashboard.css';
 
 export default function AddEditStudent({ student, onBack, onSave }) {
     const isEditMode = !!student;
+    const [classes, setClasses] = useState([]);
+    const [parents, setParents] = useState([]);
 
     const [formData, setFormData] = useState({
         name: student?.name || '',
@@ -12,20 +15,78 @@ export default function AddEditStudent({ student, onBack, onSave }) {
         email: student?.email || '',
         phone: student?.phone || '',
         grade: student?.grade || '',
+        classId: student?.classId || '',
+        className: student?.className || '',
         gender: student?.gender || 'Male',
         dateOfBirth: student?.dateOfBirth || '',
         placeOfBirth: 'Jakarta', // Default or from data
         address: student?.address || '',
         city: student?.city || '',
+        parentId: student?.parentId || '',
         parentName: student?.parentName || '',
         parentEmail: student?.parentEmail || '',
         parentPhone: student?.parentPhone || '',
         status: student?.status || 'Active'
     });
 
+    // Fetch classes and parents on mount
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [classesRes, parentsRes] = await Promise.all([
+                    api.client.get('/classes'),
+                    api.getParents()
+                ]);
+                setClasses(classesRes.data || []);
+                setParents(parentsRes || []);
+            } catch (error) {
+                console.error('Failed to fetch form data:', error);
+            }
+        };
+        fetchData();
+    }, []);
+
+    // Handle parent selection from dropdown
+    const handleParentSelect = (e) => {
+        const selectedId = e.target.value;
+        if (!selectedId) {
+            // "None" selected — clear parent fields
+            setFormData(prev => ({
+                ...prev,
+                parentId: '',
+                parentName: '',
+                parentEmail: '',
+                parentPhone: ''
+            }));
+            return;
+        }
+        const parent = parents.find(p => String(p.id) === String(selectedId));
+        if (parent) {
+            setFormData(prev => ({
+                ...prev,
+                parentId: parent.id,
+                parentName: parent.parentName || '',
+                parentEmail: parent.email || '',
+                parentPhone: parent.phone || ''
+            }));
+        }
+    };
+
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+
+        // If class is selected, also set className
+        if (name === 'classId') {
+            const selectedClass = classes.find(c => c.id == value);
+            setFormData(prev => ({
+                ...prev,
+                classId: value,
+                className: selectedClass?.name || '',
+                grade: selectedClass?.name || prev.grade
+            }));
+        } else {
+            setFormData(prev => ({ ...prev, [name]: value }));
+        }
     };
 
     const handleSubmit = (e) => {
@@ -71,33 +132,38 @@ export default function AddEditStudent({ student, onBack, onSave }) {
                         </div>
 
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Full Name *</label>
+                            <label htmlFor="studentName" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Full Name *</label>
                             <input
+                                id="studentName"
                                 type="text"
                                 name="name"
                                 value={formData.name}
                                 onChange={handleChange}
                                 required
+                                autoComplete="name"
                                 style={{ width: '100%', padding: '0.75rem', border: '1px solid #e5e7eb', borderRadius: '8px' }}
                             />
                         </div>
 
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Student ID *</label>
+                            <label htmlFor="studentIdField" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Student ID *</label>
                             <input
+                                id="studentIdField"
                                 type="text"
                                 name="studentId"
                                 value={formData.studentId}
                                 onChange={handleChange}
                                 required
                                 placeholder="#123456"
+                                autoComplete="off"
                                 style={{ width: '100%', padding: '0.75rem', border: '1px solid #e5e7eb', borderRadius: '8px' }}
                             />
                         </div>
 
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Grade *</label>
+                            <label htmlFor="grade" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Grade *</label>
                             <select
+                                id="grade"
                                 name="grade"
                                 value={formData.grade}
                                 onChange={handleChange}
@@ -105,18 +171,33 @@ export default function AddEditStudent({ student, onBack, onSave }) {
                                 style={{ width: '100%', padding: '0.75rem', border: '1px solid #e5e7eb', borderRadius: '8px' }}
                             >
                                 <option value="">Select Grade</option>
-                                <option value="VII A">VII A</option>
-                                <option value="VII B">VII B</option>
-                                <option value="VII C">VII C</option>
-                                <option value="VIII A">VIII A</option>
-                                <option value="VIII B">VIII B</option>
-                                <option value="IX A">IX A</option>
+                                {classes.map(cls => (
+                                    <option key={cls.id} value={cls.name}>{cls.name}</option>
+                                ))}
                             </select>
                         </div>
 
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Gender *</label>
+                            <label htmlFor="classId" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Class *</label>
                             <select
+                                id="classId"
+                                name="classId"
+                                value={formData.classId}
+                                onChange={handleChange}
+                                required
+                                style={{ width: '100%', padding: '0.75rem', border: '1px solid #e5e7eb', borderRadius: '8px' }}
+                            >
+                                <option value="">Select Class</option>
+                                {classes.map(cls => (
+                                    <option key={cls.id} value={cls.id}>{cls.name}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label htmlFor="gender" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Gender *</label>
+                            <select
+                                id="gender"
                                 name="gender"
                                 value={formData.gender}
                                 onChange={handleChange}
@@ -129,21 +210,24 @@ export default function AddEditStudent({ student, onBack, onSave }) {
                         </div>
 
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Date of Birth *</label>
+                            <label htmlFor="dateOfBirth" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Date of Birth *</label>
                             <input
                                 type="date"
+                                id="dateOfBirth"
                                 name="dateOfBirth"
                                 value={formData.dateOfBirth}
                                 onChange={handleChange}
                                 required
+                                autoComplete="bday"
                                 style={{ width: '100%', padding: '0.75rem', border: '1px solid #e5e7eb', borderRadius: '8px' }}
                             />
                         </div>
 
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Place of Birth</label>
+                            <label htmlFor="placeOfBirth" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Place of Birth</label>
                             <input
                                 type="text"
+                                id="placeOfBirth"
                                 name="placeOfBirth"
                                 value={formData.placeOfBirth}
                                 onChange={handleChange}
@@ -158,35 +242,41 @@ export default function AddEditStudent({ student, onBack, onSave }) {
                     </h4>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Email *</label>
+                            <label htmlFor="studentEmail" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Email *</label>
                             <input
+                                id="studentEmail"
                                 type="email"
                                 name="email"
                                 value={formData.email}
                                 onChange={handleChange}
                                 required
+                                autoComplete="email"
                                 style={{ width: '100%', padding: '0.75rem', border: '1px solid #e5e7eb', borderRadius: '8px' }}
                             />
                         </div>
                         <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Phone *</label>
+                            <label htmlFor="studentPhone" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Phone *</label>
                             <input
+                                id="studentPhone"
                                 type="tel"
                                 name="phone"
                                 value={formData.phone}
                                 onChange={handleChange}
                                 required
+                                autoComplete="tel"
                                 style={{ width: '100%', padding: '0.75rem', border: '1px solid #e5e7eb', borderRadius: '8px' }}
                             />
                         </div>
                         <div style={{ gridColumn: 'span 2' }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Address *</label>
+                            <label htmlFor="studentAddress" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Address *</label>
                             <textarea
+                                id="studentAddress"
                                 name="address"
                                 value={formData.address}
                                 onChange={handleChange}
                                 required
                                 rows="3"
+                                autoComplete="street-address"
                                 style={{ width: '100%', padding: '0.75rem', border: '1px solid #e5e7eb', borderRadius: '8px', fontFamily: 'inherit' }}
                             />
                         </div>
@@ -194,42 +284,52 @@ export default function AddEditStudent({ student, onBack, onSave }) {
 
                     {/* Section: Parent Information */}
                     <h4 style={{ color: 'var(--primary-color)', marginBottom: '1rem', borderBottom: '1px solid #eee', paddingBottom: '0.5rem' }}>
-                        Parent Information
+                        Parent / Guardian
                     </h4>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Parent Name *</label>
-                            <input
-                                type="text"
-                                name="parentName"
-                                value={formData.parentName}
-                                onChange={handleChange}
+                        {/* Parent Selector */}
+                        <div style={{ gridColumn: 'span 2' }}>
+                            <label htmlFor="parentId" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Select Parent *</label>
+                            <select
+                                id="parentId"
+                                name="parentId"
+                                value={formData.parentId}
+                                onChange={handleParentSelect}
                                 required
-                                style={{ width: '100%', padding: '0.75rem', border: '1px solid #e5e7eb', borderRadius: '8px' }}
-                            />
+                                style={{ width: '100%', padding: '0.75rem', border: '1px solid #e5e7eb', borderRadius: '8px', background: 'white' }}
+                            >
+                                <option value="">-- Choose a parent --</option>
+                                {parents.map(p => (
+                                    <option key={p.id} value={p.id}>
+                                        {p.parentName} — {p.email}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Parent Email *</label>
-                            <input
-                                type="email"
-                                name="parentEmail"
-                                value={formData.parentEmail}
-                                onChange={handleChange}
-                                required
-                                style={{ width: '100%', padding: '0.75rem', border: '1px solid #e5e7eb', borderRadius: '8px' }}
-                            />
-                        </div>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Parent Phone *</label>
-                            <input
-                                type="tel"
-                                name="parentPhone"
-                                value={formData.parentPhone}
-                                onChange={handleChange}
-                                required
-                                style={{ width: '100%', padding: '0.75rem', border: '1px solid #e5e7eb', borderRadius: '8px' }}
-                            />
-                        </div>
+
+                        {/* Auto-filled read-only fields (shown when parent selected) */}
+                        {formData.parentId && (
+                            <>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#6b7280' }}>Parent Name</label>
+                                    <div style={{ padding: '0.75rem', background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '8px', color: '#374151' }}>
+                                        {formData.parentName || '—'}
+                                    </div>
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#6b7280' }}>Parent Email</label>
+                                    <div style={{ padding: '0.75rem', background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '8px', color: '#374151' }}>
+                                        {formData.parentEmail || '—'}
+                                    </div>
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#6b7280' }}>Parent Phone</label>
+                                    <div style={{ padding: '0.75rem', background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '8px', color: '#374151' }}>
+                                        {formData.parentPhone || '—'}
+                                    </div>
+                                </div>
+                            </>
+                        )}
                     </div>
 
                     {/* Actions */}

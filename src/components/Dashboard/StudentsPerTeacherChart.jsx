@@ -41,10 +41,10 @@ const StudentsPerTeacherChart = ({ students = [], teachers = [] }) => {
 
     return (
         <ChartErrorBoundary>
-            <div className="w-full h-[350px] bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <div style={{ width: '100%', height: '350px', background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #f3f4f6' }}>
                 <h3 className="text-lg font-bold text-gray-800 mb-6">Top 10 Teachers by Class Size</h3>
 
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height={250}>
                     <BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#E5E7EB" />
                         <XAxis type="number" hide />

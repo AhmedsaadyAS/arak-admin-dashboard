@@ -9,15 +9,28 @@ export default function TeacherDetails() {
     const { id } = useParams();
     const navigate = useNavigate();
     const [teacher, setTeacher] = useState(null);
+    const [schedules, setSchedules] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchTeacher = async () => {
             try {
+                // 1. Fetch Teacher Details
                 const data = await api.getTeacherById(id);
                 setTeacher(data);
+
+                // 2. Fetch All Schedules and Filter Client-Side
+                // This ensures we find the teacher's schedule regardless of string/number ID mismatches in the API
+                const allSchedules = await api.getSchedules();
+
+                const teacherSchedules = allSchedules.filter(s => {
+                    // Robust comparison handling both string and number types
+                    return String(s.teacherId) === String(id);
+                });
+
+                setSchedules(teacherSchedules);
             } catch (error) {
-                console.error("Failed to fetch teacher:", error);
+                console.error("Failed to fetch teacher data:", error);
             } finally {
                 setLoading(false);
             }
@@ -45,7 +58,45 @@ export default function TeacherDetails() {
     const about = teacher.about || 'No details available.';
     const dateJoined = teacher.dateJoined || '2021';
 
-    const schedule = getTeacherSchedule(parseInt(id));
+    // Transform live schedules into the format expected by the UI
+    const schedule = {};
+
+    schedules.forEach(s => {
+        // Map day names to indices (Sunday=0, Monday=1, etc.)
+        const dayMap = {
+            'Sunday': 0, 'Monday': 1, 'Tuesday': 2,
+            'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6
+        };
+
+        let dayIndex;
+        // Prioritize 'day' string field as seen in db.json
+        if (s.day && dayMap[s.day] !== undefined) {
+            dayIndex = dayMap[s.day];
+        } else if (s.dayOfWeek !== undefined) {
+            dayIndex = s.dayOfWeek;
+        } else {
+            return;
+        }
+
+        if (!schedule[dayIndex]) {
+            schedule[dayIndex] = [];
+        }
+
+        schedule[dayIndex].push({
+            id: s.id,
+            classId: s.classId || s.className || 'N/A', // Try className too if classId is numeric ID
+            startTime: s.time || s.startTime || '08:00',
+            endTime: s.endTime || '09:00', // db.json might not have endTime, default to +1 hour logic if needed
+            room: s.room || 'Room A', // Generic default
+            subject: s.subject || 'General'
+        });
+    });
+
+    // Sort contents of each day by time
+    Object.keys(schedule).forEach(day => {
+        schedule[day].sort((a, b) => a.startTime.localeCompare(b.startTime));
+    });
+
     const weekDays = [0, 1, 2, 3, 4]; // Sun-Thu
 
     return (

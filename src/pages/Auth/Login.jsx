@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { Eye, EyeOff, Lock, Mail, AlertCircle, Copy, Zap } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, AlertCircle, Zap } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import * as authService from '../../services/authService';
+import CircuitPattern from '../../components/auth/CircuitPattern';
+import DemoCredentials from '../../components/auth/DemoCredentials';
 import logo from '../../assets/logo.png';
 import './Login.css';
 
@@ -63,6 +65,12 @@ export default function Login() {
         }, 300);
     };
 
+    const handleQuickLogin = (email, password) => {
+        setValue('email', email);
+        setValue('password', password);
+        handleSubmit(onSubmit)();
+    };
+
     const copyToClipboard = async (text, type) => {
         try {
             await navigator.clipboard.writeText(text);
@@ -77,97 +85,11 @@ export default function Login() {
         <div className="login-container">
             {/* Left Side - Branding */}
             <div className="relative flex-1 bg-gradient-to-br from-blue-700 via-blue-800 to-indigo-900 flex items-center justify-center p-16 overflow-hidden">
-                {/* Circuit Board Pattern - Top Left Corner */}
-                <div className="absolute top-0 left-0 w-80 h-80 opacity-20 pointer-events-none overflow-hidden">
-                    <svg viewBox="0 0 100 100" className="w-full h-full text-white fill-none stroke-current">
-                        {/* Circuit Traces */}
-                        <path d="M10 0 V20 L30 40 H50" strokeWidth="1" />
-                        <circle cx="50" cy="40" r="1.5" fill="currentColor" />
-
-                        <path d="M0 30 H20 L40 50 V70" strokeWidth="1" />
-                        <circle cx="40" cy="70" r="1.5" fill="currentColor" />
-
-                        <path d="M60 0 V15 L80 35 H100" strokeWidth="1" />
-                        <circle cx="60" cy="0" r="1.5" fill="currentColor" />
-
-                        <path d="M0 60 H15 L35 80 V100" strokeWidth="1" />
-                        <circle cx="35" cy="80" r="1.5" fill="currentColor" />
-
-                        <path d="M80 10 V25 H60" strokeWidth="1" />
-                        <circle cx="60" cy="25" r="1.5" fill="currentColor" />
-
-                        <path d="M20 90 H35 V70" strokeWidth="1" />
-                        <circle cx="35" cy="70" r="1.5" fill="currentColor" />
-
-                        {/* Geometric Accents */}
-                        <rect x="15" y="15" width="4" height="4" strokeWidth="0" fill="currentColor" opacity="0.6" />
-                        <rect x="70" y="70" width="6" height="6" strokeWidth="0" fill="currentColor" opacity="0.4" />
-                        <circle cx="85" cy="55" r="2" fill="currentColor" opacity="0.6" />
-                    </svg>
-                </div>
-
-                {/* Circuit Board Pattern - Top Right Corner */}
-                <div className="absolute top-0 right-0 w-80 h-80 opacity-20 pointer-events-none overflow-hidden rotate-90">
-                    <svg viewBox="0 0 100 100" className="w-full h-full text-white fill-none stroke-current">
-                        <path d="M10 0 V20 L30 40 H50" strokeWidth="1" />
-                        <circle cx="50" cy="40" r="1.5" fill="currentColor" />
-                        <path d="M0 30 H20 L40 50 V70" strokeWidth="1" />
-                        <circle cx="40" cy="70" r="1.5" fill="currentColor" />
-                        <path d="M60 0 V15 L80 35 H100" strokeWidth="1" />
-                        <circle cx="60" cy="0" r="1.5" fill="currentColor" />
-                        <path d="M0 60 H15 L35 80 V100" strokeWidth="1" />
-                        <circle cx="35" cy="80" r="1.5" fill="currentColor" />
-                        <path d="M80 10 V25 H60" strokeWidth="1" />
-                        <circle cx="60" cy="25" r="1.5" fill="currentColor" />
-                        <path d="M20 90 H35 V70" strokeWidth="1" />
-                        <circle cx="35" cy="70" r="1.5" fill="currentColor" />
-                        <rect x="15" y="15" width="4" height="4" strokeWidth="0" fill="currentColor" opacity="0.6" />
-                        <rect x="70" y="70" width="6" height="6" strokeWidth="0" fill="currentColor" opacity="0.4" />
-                        <circle cx="85" cy="55" r="2" fill="currentColor" opacity="0.6" />
-                    </svg>
-                </div>
-
-                {/* Circuit Board Pattern - Bottom Left Corner */}
-                <div className="absolute bottom-0 left-0 w-80 h-80 opacity-20 pointer-events-none overflow-hidden -rotate-90">
-                    <svg viewBox="0 0 100 100" className="w-full h-full text-white fill-none stroke-current">
-                        <path d="M10 0 V20 L30 40 H50" strokeWidth="1" />
-                        <circle cx="50" cy="40" r="1.5" fill="currentColor" />
-                        <path d="M0 30 H20 L40 50 V70" strokeWidth="1" />
-                        <circle cx="40" cy="70" r="1.5" fill="currentColor" />
-                        <path d="M60 0 V15 L80 35 H100" strokeWidth="1" />
-                        <circle cx="60" cy="0" r="1.5" fill="currentColor" />
-                        <path d="M0 60 H15 L35 80 V100" strokeWidth="1" />
-                        <circle cx="35" cy="80" r="1.5" fill="currentColor" />
-                        <path d="M80 10 V25 H60" strokeWidth="1" />
-                        <circle cx="60" cy="25" r="1.5" fill="currentColor" />
-                        <path d="M20 90 H35 V70" strokeWidth="1" />
-                        <circle cx="35" cy="70" r="1.5" fill="currentColor" />
-                        <rect x="15" y="15" width="4" height="4" strokeWidth="0" fill="currentColor" opacity="0.6" />
-                        <rect x="70" y="70" width="6" height="6" strokeWidth="0" fill="currentColor" opacity="0.4" />
-                        <circle cx="85" cy="55" r="2" fill="currentColor" opacity="0.6" />
-                    </svg>
-                </div>
-
-                {/* Circuit Board Pattern - Bottom Right Corner */}
-                <div className="absolute bottom-0 right-0 w-80 h-80 opacity-20 pointer-events-none overflow-hidden rotate-180">
-                    <svg viewBox="0 0 100 100" className="w-full h-full text-white fill-none stroke-current">
-                        <path d="M10 0 V20 L30 40 H50" strokeWidth="1" />
-                        <circle cx="50" cy="40" r="1.5" fill="currentColor" />
-                        <path d="M0 30 H20 L40 50 V70" strokeWidth="1" />
-                        <circle cx="40" cy="70" r="1.5" fill="currentColor" />
-                        <path d="M60 0 V15 L80 35 H100" strokeWidth="1" />
-                        <circle cx="60" cy="0" r="1.5" fill="currentColor" />
-                        <path d="M0 60 H15 L35 80 V100" strokeWidth="1" />
-                        <circle cx="35" cy="80" r="1.5" fill="currentColor" />
-                        <path d="M80 10 V25 H60" strokeWidth="1" />
-                        <circle cx="60" cy="25" r="1.5" fill="currentColor" />
-                        <path d="M20 90 H35 V70" strokeWidth="1" />
-                        <circle cx="35" cy="70" r="1.5" fill="currentColor" />
-                        <rect x="15" y="15" width="4" height="4" strokeWidth="0" fill="currentColor" opacity="0.6" />
-                        <rect x="70" y="70" width="6" height="6" strokeWidth="0" fill="currentColor" opacity="0.4" />
-                        <circle cx="85" cy="55" r="2" fill="currentColor" opacity="0.6" />
-                    </svg>
-                </div>
+                {/* Circuit Board Patterns - All Corners */}
+                <CircuitPattern rotation={0} className="top-0 left-0" />
+                <CircuitPattern rotation={90} className="top-0 right-0" />
+                <CircuitPattern rotation={-90} className="bottom-0 left-0" />
+                <CircuitPattern rotation={180} className="bottom-0 right-0" />
 
                 {/* Tech Grid Pattern Overlay */}
                 <div className="absolute inset-0 opacity-10" style={{
@@ -245,6 +167,7 @@ export default function Login() {
                                 <input
                                     id="email"
                                     type="email"
+                                    autoComplete="email"
                                     className={`form-input ${errors.email ? 'input-error' : ''}`}
                                     placeholder="admin@arak.com"
                                     {...register('email', {
@@ -271,6 +194,7 @@ export default function Login() {
                                 <input
                                     id="password"
                                     type={showPassword ? 'text' : 'password'}
+                                    autoComplete="current-password"
                                     className={`form-input ${errors.password ? 'input-error' : ''}`}
                                     placeholder="Enter your password"
                                     {...register('password', {
@@ -327,76 +251,11 @@ export default function Login() {
                     </form>
 
                     {/* Demo Credentials */}
-                    <div className="demo-credentials">
-                        <p className="text-sm text-gray-700 font-semibold mb-3">🚀 Quick Demo Access</p>
-
-                        <div className="text-xs text-gray-600 space-y-2">
-                            <div className="credential-row">
-                                <span>📧 <strong>admin@arak.com</strong></span>
-                                <button
-                                    type="button"
-                                    onClick={() => copyToClipboard('admin@arak.com', 'email')}
-                                    className="copy-button"
-                                >
-                                    <Copy size={12} />
-                                    {copySuccess === 'email' ? 'Copied!' : 'Copy'}
-                                </button>
-                            </div>
-                            <div className="credential-row">
-                                <span>🔑 <strong>admin123</strong></span>
-                                <button
-                                    type="button"
-                                    onClick={() => copyToClipboard('admin123', 'password')}
-                                    className="copy-button"
-                                >
-                                    <Copy size={12} />
-                                    {copySuccess === 'password' ? 'Copied!' : 'Copy'}
-                                </button>
-                            </div>
-                            <div className="credential-row" style={{ marginTop: '0.5rem', borderTop: '1px dashed #eee', paddingTop: '0.5rem' }}>
-                                <span>👤 <strong>parent@arak.com</strong></span>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setValue('email', 'parent@arak.com');
-                                        setValue('password', 'parent123');
-                                        handleSubmit(onSubmit)();
-                                    }}
-                                    className="copy-button"
-                                    style={{ width: 'auto', padding: '2px 8px' }}
-                                >
-                                    Test Restriction
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="credential-row" style={{ marginTop: '0.5rem', display: 'flex', gap: '8px' }}>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setValue('email', 'fees@arak.com');
-                                    setValue('password', 'fees123');
-                                    handleSubmit(onSubmit)();
-                                }}
-                                className="copy-button"
-                                style={{ width: 'auto', padding: '2px 8px', flex: 1, justifyContent: 'center' }}
-                            >
-                                Login as Fees Admin
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setValue('email', 'users@arak.com');
-                                    setValue('password', 'users123');
-                                    handleSubmit(onSubmit)();
-                                }}
-                                className="copy-button"
-                                style={{ width: 'auto', padding: '2px 8px', flex: 1, justifyContent: 'center' }}
-                            >
-                                Login as User Admin
-                            </button>
-                        </div>
-                    </div>
+                    <DemoCredentials
+                        onQuickLogin={handleQuickLogin}
+                        copySuccess={copySuccess}
+                        onCopy={copyToClipboard}
+                    />
 
                     <button
                         type="button"

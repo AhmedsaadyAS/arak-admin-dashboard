@@ -18,20 +18,52 @@ export default function UserProfile() {
 
                 <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        <label style={{ color: '#A098AE', fontSize: '0.9rem' }}>Full Name</label>
-                        <input type="text" value="Nabila A." readOnly style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #e5e7eb', fontWeight: 'bold', color: 'var(--text-dark)' }} />
+                        <label htmlFor="profile-name" style={{ color: '#A098AE', fontSize: '0.9rem' }}>Full Name</label>
+                        <input
+                            id="profile-name"
+                            name="fullName"
+                            type="text"
+                            value="Nabila A."
+                            readOnly
+                            autocomplete="name"
+                            style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #e5e7eb', fontWeight: 'bold', color: 'var(--text-dark)' }}
+                        />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        <label style={{ color: '#A098AE', fontSize: '0.9rem' }}>Email</label>
-                        <input type="text" value="nabila@arak.com" readOnly style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #e5e7eb', fontWeight: 'bold', color: 'var(--text-dark)' }} />
+                        <label htmlFor="profile-email" style={{ color: '#A098AE', fontSize: '0.9rem' }}>Email</label>
+                        <input
+                            id="profile-email"
+                            name="email"
+                            type="email"
+                            value="nabila@arak.com"
+                            readOnly
+                            autocomplete="email"
+                            style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #e5e7eb', fontWeight: 'bold', color: 'var(--text-dark)' }}
+                        />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        <label style={{ color: '#A098AE', fontSize: '0.9rem' }}>Phone</label>
-                        <input type="text" value="+12 345 6789 0" readOnly style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #e5e7eb', fontWeight: 'bold', color: 'var(--text-dark)' }} />
+                        <label htmlFor="profile-phone" style={{ color: '#A098AE', fontSize: '0.9rem' }}>Phone</label>
+                        <input
+                            id="profile-phone"
+                            name="phone"
+                            type="tel"
+                            value="+12 345 6789 0"
+                            readOnly
+                            autocomplete="tel"
+                            style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #e5e7eb', fontWeight: 'bold', color: 'var(--text-dark)' }}
+                        />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        <label style={{ color: '#A098AE', fontSize: '0.9rem' }}>Address</label>
-                        <input type="text" value="Jakarta, Indonesia" readOnly style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #e5e7eb', fontWeight: 'bold', color: 'var(--text-dark)' }} />
+                        <label htmlFor="profile-address" style={{ color: '#A098AE', fontSize: '0.9rem' }}>Address</label>
+                        <input
+                            id="profile-address"
+                            name="address"
+                            type="text"
+                            value="Jakarta, Indonesia"
+                            readOnly
+                            autocomplete="street-address"
+                            style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #e5e7eb', fontWeight: 'bold', color: 'var(--text-dark)' }}
+                        />
                     </div>
                 </div>
             </div>

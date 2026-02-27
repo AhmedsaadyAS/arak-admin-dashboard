@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Search, Plus, Phone, Mail, Download, Edit2, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Search, Plus, Phone, Mail, Download, Edit2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../services/api';
+import { dataIntegrityService } from '../../services/dataIntegrityService';
 import { useRefresh } from '../../context/RefreshContext';
 import TableSkeleton from '../../components/common/TableSkeleton';
+import Pagination from '../../components/common/Pagination';
 import AddEditStudent from './AddEditStudent';
 import './StudentsList.css';
 
@@ -14,17 +16,16 @@ export default function StudentsList() {
     const { refreshKey } = useRefresh();
 
     // Search & Filter State
-    // We use a separate state for the debounced/active search term to prevent rapid API calls
     const [searchTerm, setSearchTerm] = useState('');
     const [gradeFilter, setGradeFilter] = useState('All');
     const [statusFilter, setStatusFilter] = useState('All');
 
     // Data State
     const [students, setStudents] = useState([]);
+    const [classes, setClasses] = useState([]);
     const [page, setPage] = useState(1);
     const [totalStudents, setTotalStudents] = useState(0);
     const [loading, setLoading] = useState(true);
-    const [loadingMore, setLoadingMore] = useState(false);
     const [error, setError] = useState(null);
 
     // Edit Mode State
@@ -32,107 +33,125 @@ export default function StudentsList() {
     const [currentStudent, setCurrentStudent] = useState(null);
 
     /**
-     * Fetch Students from API
-     * Handles both initial load (page 1) and "Load More" (page > 1)
+     * Fetch Students from API with Server-Side Pagination
+     * Uses json-server pagination: _page and _limit params
+     * Extracts total count from X-Total-Count header
      */
-    const fetchStudents = useCallback(async (isLoadMore = false) => {
+    const fetchStudents = useCallback(async () => {
         try {
-            if (isLoadMore) {
-                setLoadingMore(true);
-            } else {
-                setLoading(true);
-            }
+            setLoading(true);
+            setError(null);
 
             const params = {
-                _page: isLoadMore ? page + 1 : 1, // Calculate next page if loading more
+                _page: page,
                 _limit: ITEMS_PER_PAGE,
             };
 
             // Apply Filters to API Params
             if (searchTerm) params.q = searchTerm;
             if (gradeFilter !== 'All') params.grade = gradeFilter;
-            // JSON Server expects 'Active'/'Inactive' matching the string in db
             if (statusFilter !== 'All') params.status = statusFilter;
 
             // Make the Request
             const { data, total } = await api.getStudents(params);
 
-            if (isLoadMore) {
-                setStudents(prev => [...prev, ...data]);
-                setPage(prev => prev + 1);
-            } else {
-                setStudents(data);
-                setPage(1);
-            }
-
+            setStudents(data);
             setTotalStudents(total);
-            setError(null);
         } catch (err) {
             console.error("Failed to fetch students:", err);
-            setError("Failed to load students data.");
+            setError(`Failed to load students data: ${err.message || err.toString()}`);
         } finally {
             setLoading(false);
-            setLoadingMore(false);
         }
     }, [page, searchTerm, gradeFilter, statusFilter]);
 
-    // Initial Load & Filter Changes
-    // When filters change, we reset to Page 1
+    // Fetch data when dependencies change
     useEffect(() => {
-        // Debounce search a tiny bit or just run effect
         const timer = setTimeout(() => {
-            fetchStudents(false);
-        }, 300);
+            fetchStudents();
+        }, 300); // Debounce search
         return () => clearTimeout(timer);
-    }, [searchTerm, gradeFilter, statusFilter, refreshKey]);
+    }, [fetchStudents, refreshKey]);
 
-    const handleLoadMore = () => {
-        fetchStudents(true);
-    };
+    // Fetch classes for filter dropdown
+    useEffect(() => {
+        const fetchClasses = async () => {
+            try {
+                const response = await api.client.get('/classes');
+                setClasses(response.data || []);
+            } catch (error) {
+                console.error('Failed to fetch classes:', error);
+            }
+        };
+        fetchClasses();
+    }, []);
 
-    const handleAddStudent = () => {
+    // Handle page change
+    const handlePageChange = useCallback((newPage) => {
+        setPage(newPage);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, []);
+
+    const handleAddStudent = useCallback(() => {
         setCurrentStudent(null);
         setIsEditing(true);
-    };
+    }, []);
 
-    const handleEditStudent = (student, e) => {
+    const handleEditStudent = useCallback((student, e) => {
         e.stopPropagation();
         setCurrentStudent(student);
         setIsEditing(true);
-    };
+    }, []);
 
-    const handleSaveStudent = async (studentData) => {
+    const handleSaveStudent = useCallback(async (studentData) => {
         try {
+            // Ensure all required fields are present
+            const completeData = {
+                ...studentData,
+                // Ensure className is set if classId exists (may come from form)
+                className: studentData.className || studentData.grade || '',
+                email: studentData.email || '',
+                status: studentData.status || 'Active'
+            };
+
+            let savedStudent;
+            const oldParentId = currentStudent?.parentId || null;
+
             if (currentStudent) {
-                await api.updateStudent(currentStudent.id, studentData);
+                savedStudent = await api.updateStudent(currentStudent.id, completeData);
             } else {
-                await api.createStudent(studentData);
+                savedStudent = await api.createStudent(completeData);
             }
+
+            // Sync: keep parent's linkedStudents in sync
+            await dataIntegrityService.syncStudentToParent(savedStudent, oldParentId);
+
             setIsEditing(false);
             setCurrentStudent(null);
             fetchStudents(false); // Reload list
         } catch (err) {
+            console.error('Failed to save student:', err);
             alert("Failed to save student");
         }
-    };
+    }, [currentStudent, fetchStudents]);
 
-    const handleCall = (studentName, e) => {
+    const handleCall = useCallback((studentName, e) => {
         e.stopPropagation();
         alert(`Calling parent of ${studentName}...`);
-    };
+    }, []);
 
-    const handleEmail = (studentName, e) => {
+    const handleEmail = useCallback((studentName, e) => {
         e.stopPropagation();
         alert(`Opening email to parent of ${studentName}...`);
-    };
+    }, []);
 
-    const handleExport = () => {
+    const handleExport = useCallback(() => {
         alert(`Exporting ${totalStudents} students to CSV...`);
-    };
+    }, [totalStudents]);
 
-    const handleViewDetails = (id) => {
+    const handleViewDetails = useCallback((id) => {
         navigate(`/students/${id}`);
-    };
+    }, [navigate]);
 
     if (isEditing) {
         return (
@@ -146,8 +165,6 @@ export default function StudentsList() {
             />
         );
     }
-
-    const hasMore = students.length < totalStudents;
 
     return (
         <section className="students-list-container animate-fade-in">
@@ -174,9 +191,9 @@ export default function StudentsList() {
                     onChange={(e) => setGradeFilter(e.target.value)}
                 >
                     <option value="All">All Grades</option>
-                    <option value="VII A">VII A</option>
-                    <option value="VII B">VII B</option>
-                    <option value="VII C">VII C</option>
+                    {classes.map(cls => (
+                        <option key={cls.id} value={cls.name}>{cls.name}</option>
+                    ))}
                 </select>
 
                 <select
@@ -249,7 +266,7 @@ export default function StudentsList() {
                                         <td>
                                             <span className="grade-badge">{student.grade}</span>
                                         </td>
-                                        <td style={{ color: '#303972' }}>{student.address?.split(',')[0]}</td>
+                                        <td style={{ color: '#303972' }}>{student.city || student.address?.split(',')[0] || '-'}</td>
                                         <td>
                                             <div className="action-buttons">
                                                 <button
@@ -293,27 +310,16 @@ export default function StudentsList() {
                         </tbody>
                     </table>
 
-                    {/* Load More Button */}
-                    {hasMore && (
-                        <div className="flex justify-center p-6">
-                            <button
-                                onClick={handleLoadMore}
-                                disabled={loadingMore}
-                                className="flex items-center gap-2 px-6 py-2.5 bg-white border border-[#4D44B5] text-[#4D44B5] rounded-full font-semibold hover:bg-indigo-50 transition-all disabled:opacity-50"
-                            >
-                                {loadingMore ? (
-                                    <>
-                                        <div className="w-4 h-4 border-2 border-[#4D44B5] border-t-transparent rounded-full animate-spin"></div>
-                                        Loading...
-                                    </>
-                                ) : (
-                                    <>
-                                        <ChevronDown size={20} />
-                                        Load More Students
-                                    </>
-                                )}
-                            </button>
-                        </div>
+                    {/* Pagination Controls */}
+                    {!loading && students.length > 0 && (
+                        <Pagination
+                            currentPage={page}
+                            totalPages={Math.ceil(totalStudents / ITEMS_PER_PAGE)}
+                            totalItems={totalStudents}
+                            itemsPerPage={ITEMS_PER_PAGE}
+                            onPageChange={handlePageChange}
+                            loading={loading}
+                        />
                     )}
                 </div>
             )}

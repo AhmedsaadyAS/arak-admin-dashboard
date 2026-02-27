@@ -2,14 +2,14 @@ import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:5000';
 
-// Mock user database (in production, this would be on the backend)
-const MOCK_USERS = [
+// Demo/fallback users - used when the API is unreachable or for quick demo logins
+const DEMO_USERS = [
     {
         id: 1,
         email: 'admin@arak.com',
-        password: 'admin123', // In production, never store plain passwords!
+        password: 'admin123',
         name: 'Admin User',
-        role: 'Admin',
+        role: 'Super Admin',
         avatar: 'AU'
     },
     {
@@ -43,92 +43,129 @@ const MOCK_USERS = [
         name: 'HR Manager',
         role: 'Users Admin',
         avatar: 'HR'
+    },
+    {
+        id: 6,
+        email: 'academic@arak.com',
+        password: 'academic123',
+        name: 'Academic Director',
+        role: 'Academic Admin',
+        avatar: 'AD'
+    },
+    {
+        id: 7,
+        email: 'schooladmin@arak.com',
+        password: 'school123',
+        name: 'School Admin',
+        role: 'Admin',
+        avatar: 'SA'
     }
 ];
 
 /**
- * Mock login function
- * In production, this would make a real API call to your backend
+ * Login function - checks API first, then falls back to demo accounts
+ * This allows users created via User Management to log in
  */
 export const login = async (email, password) => {
-    return new Promise((resolve, reject) => {
-        // Simulate network delay
-        setTimeout(() => {
-            const user = MOCK_USERS.find(
-                u => u.email === email && u.password === password
-            );
+    // 1. Try to find the user in the API (db.json)
+    try {
+        const response = await axios.get(`${API_BASE_URL}/users`, {
+            params: { email }
+        });
 
-            if (user) {
-                // Create a mock JWT token
-                const token = `mock_jwt_token_${user.id}_${Date.now()}`;
+        const apiUsers = response.data || [];
+        // Find exact email match (JSON Server may return partial matches)
+        const apiUser = apiUsers.find(u => u.email === email);
 
-                // Return user data without password
-                const { password: _, ...userWithoutPassword } = user;
+        if (apiUser && apiUser.password === password) {
+            const token = `mock_jwt_token_${apiUser.id}_${Date.now()}`;
+            const { password: _, ...userWithoutPassword } = apiUser;
 
-                resolve({
-                    success: true,
-                    data: {
-                        user: userWithoutPassword,
-                        token: token
-                    }
-                });
-            } else {
-                reject({
-                    success: false,
-                    message: 'Invalid email or password'
-                });
+            // Generate avatar initials from name
+            if (!userWithoutPassword.avatar) {
+                const nameParts = (userWithoutPassword.name || '').split(' ');
+                userWithoutPassword.avatar = nameParts.map(p => p.charAt(0).toUpperCase()).join('').slice(0, 2) || 'U';
             }
-        }, 800); // 800ms delay to simulate network
-    });
+
+            return {
+                success: true,
+                data: {
+                    user: userWithoutPassword,
+                    token: token
+                }
+            };
+        }
+    } catch (err) {
+        console.warn('API login check failed, falling back to demo accounts:', err.message);
+    }
+
+    // 2. Fallback: Check demo accounts (for quick demo logins)
+    const demoUser = DEMO_USERS.find(
+        u => u.email === email && u.password === password
+    );
+
+    if (demoUser) {
+        const token = `mock_jwt_token_${demoUser.id}_${Date.now()}`;
+        const { password: _, ...userWithoutPassword } = demoUser;
+
+        return {
+            success: true,
+            data: {
+                user: userWithoutPassword,
+                token: token
+            }
+        };
+    }
+
+    // 3. No match in API or demo accounts
+    throw new Error('Invalid email or password');
 };
 
 /**
  * Mock logout function
  */
 export const logout = async () => {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve({ success: true });
-        }, 300);
-    });
+    return { success: true };
 };
 
 /**
  * Verify token validity
- * In production, this would validate the JWT token with the backend
  */
 export const verifyToken = async (token) => {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            // Mock validation - in production, send token to backend
-            if (token && token.startsWith('mock_jwt_token_')) {
-                resolve({ valid: true });
-            } else {
-                resolve({ valid: false });
-            }
-        }, 200);
-    });
+    if (token && token.startsWith('mock_jwt_token_')) {
+        return { valid: true };
+    }
+    return { valid: false };
 };
 
 /**
  * Get current user from backend (with token)
- * In production, this would fetch user data from backend using the token
  */
 export const getCurrentUser = async (token) => {
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            // Extract user ID from mock token
-            const parts = token.split('_');
-            const userId = parseInt(parts[3]);
+    // Extract user ID from mock token
+    const parts = token.split('_');
+    const userId = parts[3];
 
-            const user = MOCK_USERS.find(u => u.id === userId);
+    // Try API first
+    try {
+        const response = await axios.get(`${API_BASE_URL}/users/${userId}`);
+        if (response.data) {
+            const { password: _, ...userWithoutPassword } = response.data;
+            return { success: true, data: userWithoutPassword };
+        }
+    } catch (err) {
+        // Fallback to demo users
+    }
 
-            if (user) {
-                const { password: _, ...userWithoutPassword } = user;
-                resolve({ success: true, data: userWithoutPassword });
-            } else {
-                reject({ success: false, message: 'User not found' });
-            }
-        }, 300);
-    });
+    // Fallback to demo users
+    const numericId = parseInt(userId);
+    const user = DEMO_USERS.find(u => u.id === numericId);
+
+    if (user) {
+        const { password: _, ...userWithoutPassword } = user;
+        return { success: true, data: userWithoutPassword };
+    }
+
+    throw new Error('User not found');
 };
+

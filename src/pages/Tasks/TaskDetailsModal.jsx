@@ -48,6 +48,18 @@ export default function TaskDetailsModal({ task, teacher, className, onClose }) 
 
                         <div className="detail-item">
                             <div className="detail-icon">
+                                <Clock size={18} />
+                            </div>
+                            <div className="detail-info">
+                                <span className="detail-label">Status</span>
+                                <span className={`status-badge status-${task.status?.toLowerCase()}`}>
+                                    {task.status || 'Unknown'}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="detail-item">
+                            <div className="detail-icon">
                                 <Calendar size={18} />
                             </div>
                             <div className="detail-info">

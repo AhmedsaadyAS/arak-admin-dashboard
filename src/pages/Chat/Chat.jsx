@@ -49,8 +49,7 @@ export default function Chat() {
 
     React.useEffect(() => {
         scrollToBottom();
-        console.log('Messages updated:', messages);
-    }, [messages]);
+    }, [activeConversation, conversationsData]);
 
     return (
         <div className="dashboard-page" style={{ height: 'calc(100vh - 100px)', overflow: 'hidden' }}>

@@ -18,6 +18,7 @@ export default function TeachersList() {
 
     // Data State
     const [teachers, setTeachers] = useState([]);
+    const [subjects, setSubjects] = useState([]); // ✅ Fetch from /subjects endpoint
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -27,29 +28,29 @@ export default function TeachersList() {
 
     // Fetch Data
     useEffect(() => {
-        const fetchTeachers = async () => {
+        const fetchData = async () => {
             try {
                 setLoading(true);
-                const data = await api.getTeachers();
-                setTeachers(data);
+                // ✅ Fetch both teachers and subjects
+                const [teachersData, subjectsData] = await Promise.all([
+                    api.getTeachers(),
+                    api.client.get('/subjects')
+                ]);
+                setTeachers(teachersData);
+                setSubjects(subjectsData.data || []);
                 setError(null);
             } catch (err) {
-                console.error("Failed to fetch teachers:", err);
+                console.error("Failed to fetch data:", err);
                 setError("Failed to load teachers data.");
             } finally {
                 setTimeout(() => setLoading(false), 300);
             }
         };
 
-        fetchTeachers();
+        fetchData();
     }, [refreshKey]);
 
-    // Unique Select Options
-    const uniqueSubjects = useMemo(() => {
-        const subjects = teachers.map(t => t.subject);
-        return [...new Set(subjects)].sort();
-    }, [teachers]);
-
+    // Unique Departments (still extract from teachers)
     const uniqueDepartments = useMemo(() => {
         const departments = teachers.map(t => t.department || 'General');
         return [...new Set(departments)].sort();
@@ -166,8 +167,8 @@ export default function TeachersList() {
                     onChange={(e) => setSubjectFilter(e.target.value)}
                 >
                     <option value="All">All Subjects</option>
-                    {uniqueSubjects.map(subject => (
-                        <option key={subject} value={subject}>{subject}</option>
+                    {subjects.map(subject => (
+                        <option key={subject.id} value={subject.name}>{subject.name}</option>
                     ))}
                 </select>
 
