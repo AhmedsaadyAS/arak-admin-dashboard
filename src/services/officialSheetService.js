@@ -149,15 +149,24 @@ export function generateOfficialSheet(stageKey, subjectName, students, className
  * Uses base64 data URI to avoid blob URL issues with filenames.
  */
 export function downloadSheet(wb, filename) {
-    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' });
-    const dataURI = 'data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,' + wbout;
+    // Write workbook as a binary array (Blob-compatible)
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([wbout], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    });
+
+    // Use object URL — Chrome respects the filename on Blob URLs (unlike data: URIs)
+    const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.href = dataURI;
+    link.href = url;
     link.download = filename;
     link.style.display = 'none';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+
+    // Revoke after a short delay to allow download to start
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 // ─── Parse Uploaded Excel ─────────────────────────────

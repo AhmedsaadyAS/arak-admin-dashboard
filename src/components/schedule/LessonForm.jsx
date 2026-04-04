@@ -27,22 +27,22 @@ export default function LessonForm({ isOpen, onClose, onSave, initialData = null
         const fetchData = async () => {
             try {
                 // ✅ Fetch from normalized endpoints
-                const [classesRes, subjectsRes, teachersRes] = await Promise.all([
-                    api.client.get('/classes'),
-                    api.client.get('/subjects'), // ✅ NEW: Use /subjects endpoint
+                const [classesData, subjectsData, teachersRes] = await Promise.all([
+                    api.getClasses(),
+                    api.getSubjects(),
                     api.getTeachers()
                 ]);
 
-                setClasses(classesRes.data || []);
-                setSubjects(subjectsRes.data || []); // ✅ Direct subject data
+                setClasses(classesData || []);
+                setSubjects(subjectsData || []);
                 setTeachers(teachersRes);
 
                 // Set defaults if creating new and data loaded
-                if (!initialData && classesRes.data?.length > 0) {
+                if (!initialData && classesData?.length > 0) {
                     setFormData(prev => ({
                         ...prev,
-                        classId: classesRes.data[0].id.toString(), // Keep as string for form
-                        subjectId: subjectsRes.data?.[0]?.id.toString() || '',
+                        classId: classesData[0].id.toString(),
+                        subjectId: subjectsData?.[0]?.id.toString() || '',
                         teacherId: teachersRes?.[0]?.id.toString() || ''
                     }));
                 }

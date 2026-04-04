@@ -42,8 +42,8 @@ export default function TeacherForm({
     useEffect(() => {
         const fetchClasses = async () => {
             try {
-                const response = await api.client.get('/classes');
-                setAvailableClasses(response.data || []);
+                const classesData = await api.getClasses();
+                setAvailableClasses(classesData || []);
             } catch (error) {
                 console.error('Failed to load classes', error);
                 if (showToast) {
@@ -119,16 +119,17 @@ export default function TeacherForm({
 
     const checkOrphanedSchedules = async (teacherId, removedClassId) => {
         try {
-            const response = await api.client.get('/schedules', {
-                params: { teacherId: Number(teacherId), classId: Number(removedClassId) }
+            const schedules = await api.getSchedules({
+                teacherId: Number(teacherId),
+                classId: Number(removedClassId)
             });
 
-            if (response.data && response.data.length > 0) {
+            if (schedules && schedules.length > 0) {
                 const className = availableClasses.find(c => Number(c.id) === Number(removedClassId))?.name || `Class ${removedClassId}`;
 
                 setOrphanWarning({
                     className,
-                    scheduleCount: response.data.length,
+                    scheduleCount: schedules.length,
                     classId: removedClassId
                 });
             }
@@ -191,7 +192,7 @@ export default function TeacherForm({
                 }
 
                 // Update other teacher fields
-                await api.client.patch(`/teachers/${teacher.id}`, {
+                await api.updateTeacher(teacher.id, {
                     name: normalizedData.name,
                     subject: normalizedData.subject,
                     email: normalizedData.email,
@@ -207,7 +208,7 @@ export default function TeacherForm({
                 }
             } else {
                 // Create new teacher
-                result = await api.client.post('/teachers', normalizedData);
+                result = await api.createTeacher(normalizedData);
                 if (showToast) {
                     showToast('success', 'Teacher created successfully');
                 }

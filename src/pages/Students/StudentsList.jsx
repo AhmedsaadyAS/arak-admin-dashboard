@@ -77,8 +77,8 @@ export default function StudentsList() {
     useEffect(() => {
         const fetchClasses = async () => {
             try {
-                const response = await api.client.get('/classes');
-                setClasses(response.data || []);
+                const classes = await api.getClasses();
+                setClasses(classes || []);
             } catch (error) {
                 console.error('Failed to fetch classes:', error);
             }

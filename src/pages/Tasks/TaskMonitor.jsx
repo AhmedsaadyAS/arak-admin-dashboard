@@ -35,13 +35,13 @@ export default function TaskMonitor() {
 
     const fetchInitialData = async () => {
         try {
-            const [teachersRes, classesRes, statsRes] = await Promise.all([
+            const [teachersRes, classesData, statsRes] = await Promise.all([
                 api.getTeachers(),
-                api.client.get('/classes'),
+                api.getClasses(),
                 taskService.getTaskStats()
             ]);
             setTeachers(teachersRes);
-            setClasses(classesRes.data || []);
+            setClasses(classesData || []);
             setStats(statsRes);
         } catch (error) {
             console.error("Failed to fetch initial data", error);

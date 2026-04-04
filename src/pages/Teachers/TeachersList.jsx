@@ -34,10 +34,10 @@ export default function TeachersList() {
                 // ✅ Fetch both teachers and subjects
                 const [teachersData, subjectsData] = await Promise.all([
                     api.getTeachers(),
-                    api.client.get('/subjects')
+                    api.getSubjects()
                 ]);
                 setTeachers(teachersData);
-                setSubjects(subjectsData.data || []);
+                setSubjects(subjectsData || []);
                 setError(null);
             } catch (err) {
                 console.error("Failed to fetch data:", err);

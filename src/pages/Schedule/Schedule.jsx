@@ -33,9 +33,9 @@ export default function Schedule() {
         try {
             const [lessonsData, classesData, teachersData, subjectsData] = await Promise.all([
                 scheduleService.getAllSchedules(),
-                api.client.get('/classes'),
+                api.getClasses(),
                 api.getTeachers(),
-                api.client.get('/subjects')
+                api.getSubjects()
             ]);
 
             // Normalize lesson IDs
@@ -49,13 +49,13 @@ export default function Schedule() {
             }));
 
             setLessons(normalizedLessons);
-            setClasses(classesData.data || []);
+            setClasses(classesData || []);
             setTeachers(teachersData || []);
-            setSubjects(subjectsData.data || []);
+            setSubjects(subjectsData || []);
 
             // Set initial selectedId to first class/teacher
-            if (viewMode === 'class' && classesData.data?.length > 0) {
-                setSelectedId(classesData.data[0].id);
+            if (viewMode === 'class' && classesData?.length > 0) {
+                setSelectedId(classesData[0].id);
             } else if (viewMode === 'teacher' && teachersData?.length > 0) {
                 setSelectedId(teachersData[0].id);
             }

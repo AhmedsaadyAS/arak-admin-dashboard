@@ -30,12 +30,12 @@ export default function SheetManager() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [subjectsRes, classesRes] = await Promise.all([
-                    api.client.get('/subjects'),
-                    api.client.get('/classes'),
+                const [subjectsData, classesData] = await Promise.all([
+                    api.getSubjects(),
+                    api.getClasses(),
                 ]);
-                setSubjects(subjectsRes.data || []);
-                setAllClasses(classesRes.data || []);
+                setSubjects(subjectsData || []);
+                setAllClasses(classesData || []);
             } catch (err) {
                 console.error('Failed to fetch data:', err);
             }

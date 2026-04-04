@@ -30,8 +30,8 @@ export default function AddEditTeacher({ teacher, onBack, onSave }) {
     useEffect(() => {
         const fetchClasses = async () => {
             try {
-                const response = await api.client.get('/classes');
-                setAvailableClasses(response.data || []);
+                const classesData = await api.getClasses();
+                setAvailableClasses(classesData || []);
             } catch (error) {
                 console.error("Failed to fetch classes", error);
             }

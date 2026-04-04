@@ -33,11 +33,11 @@ export default function AddEditStudent({ student, onBack, onSave }) {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [classesRes, parentsRes] = await Promise.all([
-                    api.client.get('/classes'),
+                const [classesData, parentsRes] = await Promise.all([
+                    api.getClasses(),
                     api.getParents()
                 ]);
-                setClasses(classesRes.data || []);
+                setClasses(classesData || []);
                 setParents(parentsRes || []);
             } catch (error) {
                 console.error('Failed to fetch form data:', error);

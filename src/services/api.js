@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = 'http://localhost:5000';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 const TOKEN_KEY = 'arak_auth_token';
 
 // Create Centralized Axios Instance
@@ -307,5 +307,41 @@ export const api = {
     getRoles: async () => {
         const response = await apiClient.get('/roles');
         return response.data || [];
-    }
+    },
+
+    // --- Classes ---
+
+    getClasses: async (params = {}) => {
+        const response = await apiClient.get('/classes', { params });
+        return response.data || [];
+    },
+
+    updateClass: async (id, data) => {
+        const response = await apiClient.patch(`/classes/${id}`, data);
+        return response.data;
+    },
+
+    // --- Subjects ---
+
+    getSubjects: async (params = {}) => {
+        const response = await apiClient.get('/subjects', { params });
+        return response.data || [];
+    },
+
+    // --- Evaluations ---
+
+    getEvaluations: async (params = {}) => {
+        const response = await apiClient.get('/evaluations', { params });
+        return response.data || [];
+    },
+
+    createEvaluation: async (data) => {
+        const response = await apiClient.post('/evaluations', data);
+        return response.data;
+    },
+
+    deleteEvaluation: async (id) => {
+        const response = await apiClient.delete(`/evaluations/${id}`);
+        return response.data;
+    },
 };

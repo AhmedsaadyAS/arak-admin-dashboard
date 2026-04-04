@@ -55,12 +55,12 @@ export default function GradebookMonitor() {
     useEffect(() => {
         const fetchInit = async () => {
             try {
-                const [classesRes, subjectsRes] = await Promise.all([
-                    api.client.get('/classes'),
-                    api.client.get('/subjects'),
+                const [classesData, subjectsData] = await Promise.all([
+                    api.getClasses(),
+                    api.getSubjects(),
                 ]);
-                setClasses(classesRes.data || []);
-                setSubjects(subjectsRes.data || []);
+                setClasses(classesData || []);
+                setSubjects(subjectsData || []);
             } catch (error) {
                 console.error('Failed to fetch initial data', error);
             }
@@ -80,13 +80,11 @@ export default function GradebookMonitor() {
         setLoading(true);
         try {
             // Fetch students and evaluations in parallel
-            const [studentsResponse, gradesResponse] = await Promise.all([
+            const [studentsResponse, gradesData] = await Promise.all([
                 api.getStudents({ classId }),
-                api.client.get('/evaluations', {
-                    params: {
-                        classId: parseInt(classId, 10),
-                        subjectId: parseInt(subjectId, 10),
-                    }
+                api.getEvaluations({
+                    classId: parseInt(classId, 10),
+                    subjectId: parseInt(subjectId, 10),
                 })
             ]);
 
@@ -97,9 +95,7 @@ export default function GradebookMonitor() {
             // Each upload creates one evaluation per grade column (Month1, Final, etc.)
             // so SUM(marks) = total score, SUM(maxMarks) = total possible.
             // We also compute a normalized percentage (0-100) for letter grades & stats.
-            const rawGrades = Array.isArray(gradesResponse.data)
-                ? gradesResponse.data
-                : gradesResponse.data?.data || [];
+            const rawGrades = Array.isArray(gradesData) ? gradesData : gradesData?.data || [];
             const aggregated = studentList.map(student => {
                 const evals = rawGrades.filter(
                     g => String(g.studentId) === String(student.id)
@@ -130,7 +126,7 @@ export default function GradebookMonitor() {
     const handleLockToggle = async () => {
         try {
             const newLockStatus = !isLocked;
-            await api.client.patch(`/classes/${selectedClass}`, { gradesLocked: newLockStatus });
+            await api.updateClass(selectedClass, { gradesLocked: newLockStatus });
             setIsLocked(newLockStatus);
         } catch (error) {
             console.error('Failed to toggle lock status', error);
@@ -199,8 +195,7 @@ export default function GradebookMonitor() {
     const handleExportStudentReport = async (student) => {
         try {
             // Fetch all evaluations for this student
-            const res = await api.client.get('/evaluations', { params: { studentId: parseInt(student.id, 10) } });
-            const allGrades = Array.isArray(res.data) ? res.data : res.data?.data || [];
+            const allGrades = await api.getEvaluations({ studentId: parseInt(student.id, 10) });
             if (!allGrades || allGrades.length === 0) {
                 alert(`No grades found for ${student.name}`);
                 return;

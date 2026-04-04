@@ -23,18 +23,18 @@ export default function StudentDetails() {
             try {
                 const [studentData, subjectsData, teachersData] = await Promise.all([
                     api.getStudentById(id),
-                    api.client.get('/subjects'),
+                    api.getSubjects(),
                     api.getTeachers()
                 ]);
 
                 setStudent(studentData);
-                setSubjects(subjectsData.data || []);
+                setSubjects(subjectsData || []);
                 setTeachers(teachersData || []);
 
                 // Fetch live schedule data based on student's classId
                 if (studentData.classId) {
-                    const scheduleData = await api.client.get(`/schedules?classId=${studentData.classId}`);
-                    setSchedules(scheduleData.data || []);
+                    const scheduleData = await api.getSchedulesByClass(studentData.classId);
+                    setSchedules(scheduleData || []);
                 }
             } catch (error) {
                 console.error("Failed to fetch student:", error);
