@@ -30,8 +30,9 @@ build/
 .env.production.local
 
 # Logs
-logs
+logs/
 *.log
+server_log.txt
 
 # OS files
 Thumbs.db
@@ -39,13 +40,14 @@ Thumbs.db
 # Testing
 coverage/
 .nyc_output/
+test-results.json
 
 # Misc
 .cache/
 temp/
 tmp/
 
-# Documentation
+# Documentation (private)
 srs/
 SRS_GAP_ANALYSIS.md
 SRS.md
@@ -53,3 +55,15 @@ private/
 
 # Nested git repositories
 arak-backend/
+
+# AI tool settings (private)
+.qwen/
+.qwen*/
+
+# Large data files
+db.backup.json
+db.json
+
+# Generated SQL / scripts (keep only if documented)
+update-classes-stages.sql
+update-database.ps1
