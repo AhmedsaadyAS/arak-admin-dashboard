@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 const TOKEN_KEY = 'arak_auth_token';
 
 // Create Centralized Axios Instance
@@ -30,8 +30,11 @@ apiClient.interceptors.response.use(
     (error) => {
         // Handle global errors like 401 Unauthorized
         if (error.response && error.response.status === 401) {
-            // Optional: Dispatch event or redirect logic could go here
             console.error('Unauthorized! Token might be expired.');
+            localStorage.removeItem(TOKEN_KEY);
+            sessionStorage.removeItem(TOKEN_KEY);
+            // Redirect to login page to force user to get a fresh token
+            window.location.href = '/login';
         }
         return Promise.reject(error);
     }
@@ -78,11 +81,11 @@ export const api = {
 
         const response = await apiClient.get('/students', { params: apiParams });
 
-        // JSON Server v1 beta returns { data: [...], items: total, ... } for paginated requests
+        // JSON Server v1 beta returned items vs new Backend returns total
         if (response.data && Array.isArray(response.data.data)) {
             return {
                 data: response.data.data,
-                total: response.data.items
+                total: response.data.total ?? response.data.items ?? 0
             };
         }
 

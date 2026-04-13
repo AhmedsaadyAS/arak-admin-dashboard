@@ -9,6 +9,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "server": "json-server db.json --port 5000",
+    "seed": "node scripts/seed.js",
+    "seed:dry": "node scripts/seed.js --dry-run",
+    "seed:skip-users": "node scripts/seed.js --skip-users",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage"

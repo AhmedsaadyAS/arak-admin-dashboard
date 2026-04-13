@@ -56,7 +56,7 @@ export default function Login() {
 
     const handleDemoLogin = async () => {
         setValue('email', 'admin@arak.com');
-        setValue('password', 'admin123');
+        setValue('password', 'Admin@123');
         setValue('rememberMe', true);
 
         // Auto-submit after a short delay to show the filled values
@@ -228,9 +228,9 @@ export default function Login() {
                                 />
                                 <span>Remember me</span>
                             </label>
-                            <Link to="/forgot-password" className="forgot-password">
+                            <button type="button" onClick={() => alert('Please contact the system administrator to reset your password.')} className="forgot-password">
                                 Forgot password?
-                            </Link>
+                            </button>
                         </div>
 
                         {/* Submit Button */}

@@ -14,7 +14,8 @@ import {
     Shield,
     Award,
     BookOpen,
-    FileSpreadsheet
+    FileSpreadsheet,
+    School
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { PERMISSIONS } from "../../config/permissions";
@@ -113,6 +114,13 @@ const menuItems = [
         path: "/control/sheets",
         icon: <FileSpreadsheet size={20} />,
         permission: PERMISSIONS.CONTROL_SHEETS
+    },
+    {
+        key: "grades",
+        label: "Grades & Classes",
+        path: "/grades",
+        icon: <School size={20} />,
+        permission: PERMISSIONS.GRADES
     },
 ];
 

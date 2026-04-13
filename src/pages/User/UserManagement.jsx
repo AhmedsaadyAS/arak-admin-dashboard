@@ -97,14 +97,16 @@ export default function UserManagement() {
             alert('You do not have permission to delete admin users.');
             return;
         }
-        if (confirm(`Are you sure you want to delete admin user: ${userName}?`)) {
-            try {
-                await api.deleteUser(userId);
-                setAdminUsers(adminUsers.filter(u => u.id !== userId));
-            } catch (err) {
-                console.error('Failed to delete user:', err);
-                alert('Failed to delete user. Please try again.');
-            }
+        if (!window.confirm(`Are you sure you want to delete admin user: ${userName}?`)) {
+            return;
+        }
+        try {
+            await api.deleteUser(userId);
+            setAdminUsers(adminUsers.filter(u => u.id !== userId));
+        } catch (err) {
+            console.error('Failed to delete user:', err);
+            const errorMsg = err.response?.data?.message || err.response?.data?.errors?.[0] || 'Failed to delete user. Please try again.';
+            alert(errorMsg);
         }
     };
 
@@ -135,7 +137,7 @@ export default function UserManagement() {
             alert('You do not have permission to add admin users.');
             return;
         }
-        setCurrentEditUser(user);
+        setCurrentEditUser(user || null);
         setEditUserType('admin');
         setIsEditing(true);
     };
@@ -194,7 +196,8 @@ export default function UserManagement() {
             setCurrentEditUser(null);
         } catch (err) {
             console.error('Failed to save user:', err);
-            alert('Failed to save user. Please try again.');
+            const errorMsg = err.response?.data?.message || err.response?.data?.errors?.[0] || err.message || 'Failed to save user. Please try again.';
+            alert(errorMsg);
         }
     };
 

@@ -24,6 +24,7 @@ export const PERMISSIONS = {
     USER_MANAGEMENT: 'user_management',
     SETTINGS: 'settings',
     CONTROL_SHEETS: 'control_sheets',
+    GRADES: 'grades',
 
     // Actions
     CREATE_STUDENT: 'create_student',
@@ -55,8 +56,9 @@ export const ROLE_PERMISSIONS = {
 
     'Admin': {
         permissions: [
-            // Full access except user management
+            // Full access including user management
             PERMISSIONS.DASHBOARD,
+            PERMISSIONS.USER_MANAGEMENT,
             PERMISSIONS.STUDENTS,
             PERMISSIONS.TEACHERS,
             PERMISSIONS.SCHEDULE,
@@ -84,6 +86,7 @@ export const ROLE_PERMISSIONS = {
             PERMISSIONS.VIEW_REPORTS,
             PERMISSIONS.EXPORT_DATA,
             PERMISSIONS.CONTROL_SHEETS,
+            PERMISSIONS.GRADES,
         ],
         description: 'Administrative access to most features'
     },
@@ -107,6 +110,7 @@ export const ROLE_PERMISSIONS = {
             PERMISSIONS.MANAGE_SCHEDULE,
             PERMISSIONS.VIEW_REPORTS,
             PERMISSIONS.CONTROL_SHEETS,
+            PERMISSIONS.GRADES,
         ],
         description: 'Academic operations - students, teachers, schedules, grades'
     },

@@ -8,13 +8,13 @@ import { Copy } from 'lucide-react';
  */
 export default function DemoCredentials({ onQuickLogin, copySuccess = '', onCopy }) {
     const demoAccounts = [
-        { email: 'admin@arak.com', password: 'admin123', label: '📧', description: 'Super Admin' },
-        { email: 'parent@arak.com', password: 'parent123', label: '👤', description: 'Test Restriction' },
+        { email: 'admin@arak.com', password: 'Admin@123', label: '📧', description: 'Super Admin' },
+        { email: 'parent1@arak.com', password: 'Parent@123', label: '👤', description: 'Test Restriction' },
     ];
 
     const roleAccounts = [
-        { email: 'fees@arak.com', password: 'fees123', label: 'Login as Fees Admin' },
-        { email: 'users@arak.com', password: 'users123', label: 'Login as User Admin' },
+        { email: 'academic@arak.com', password: 'Academic Admin@123', label: 'Login as Academic Admin' },
+        { email: 'teacher1@arak.com', password: 'Teacher@123', label: 'Login as Teacher' },
     ];
 
     return (

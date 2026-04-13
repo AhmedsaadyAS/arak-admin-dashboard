@@ -26,6 +26,7 @@ import Settings from "./pages/Settings/Settings";
 import Schedule from "./pages/Schedule/Schedule";
 import ErrorBoundary from "./components/common/ErrorBoundary";
 import SheetManager from "./components/Control/SheetManager";
+import GradesPage from "./pages/Grades/GradesPage";
 import { PERMISSIONS } from "./config/permissions"; // Import permissions
 import "./styles/global.css";
 import "./styles/layout.css";
@@ -194,6 +195,14 @@ export default function App() {
                                 <ProtectedRoute requiredPermission={PERMISSIONS.CONTROL_SHEETS}>
                                     <Layout title="Control Sheets">
                                         <SheetManager />
+                                    </Layout>
+                                </ProtectedRoute>
+                            } />
+
+                            <Route path="/grades" element={
+                                <ProtectedRoute requiredPermission={PERMISSIONS.GRADES}>
+                                    <Layout title="Grades & Classes">
+                                        <GradesPage />
                                     </Layout>
                                 </ProtectedRoute>
                             } />

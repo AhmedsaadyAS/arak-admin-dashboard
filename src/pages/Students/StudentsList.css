@@ -241,6 +241,12 @@
     color: white;
 }
 
+.icon-btn-sm.btn-delete:hover {
+    background: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
 .empty-state {
     text-align: center;
     padding: 4rem 2rem;

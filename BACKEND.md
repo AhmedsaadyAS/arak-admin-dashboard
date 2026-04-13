@@ -1,12 +1,14 @@
 # ARAK Admin Dashboard — .NET Backend API Contract
 
-> **Version**: 2.0.0  
-> **Target Framework**: ASP.NET Core 8  
+> **Version**: 2.1.0  
+> **Last Updated**: April 13, 2026  
+> **Target Framework**: ASP.NET Core 9  
 > **Database**: Microsoft SQL Server 2019+  
-> **Base URL (Dev)**: `https://localhost:7000/api`  
+> **Base URL (Dev)**: `http://localhost:5000/api`  
 > **Base URL (Prod)**: `https://api.arak.school/api`  
 > **Auth**: JWT Bearer Token — `Authorization: Bearer <token>`  
-> **Frontend env var**: `VITE_API_BASE_URL` in `.env`
+> **Frontend env var**: `VITE_API_BASE_URL` in `.env`  
+> **Runtime**: Port 5000 (configured in `launchSettings.json`)
 
 ---
 
@@ -34,6 +36,8 @@
 ## 🔐 Authentication
 
 > **Note:** Current `authService.js` is fully mock. This entire section needs real implementation.
+
+> ⚠️ **CRITICAL**: See "Critical Notices & Gotchas" section below for pagination format, role strings, and other contract-breaking requirements.
 
 ### `POST /auth/login`
 Authenticate a user and return a JWT token.
@@ -347,6 +351,26 @@ Standard CRUD. `PATCH` for partial updates (role change, status, permissions).
 
 ---
 
+### 0. 🎯 Current Implementation Status (April 2026)
+
+**What's Working:**
+- ✅ Full .NET backend with ASP.NET Core Identity
+- ✅ JWT authentication with real login endpoint
+- ✅ All CRUD endpoints for Students, Teachers, Classes, Subjects, Schedules, Evaluations, Tasks, Events
+- ✅ Delete functionality with dependency checking (Students, Teachers, Users, Parents)
+- ✅ User Management with Add Admin button working
+- ✅ Class management with student capacity tracking (MaxStudents)
+- ✅ Control Sheets page with proper stage/class/subject filtering
+- ✅ Database seeding with realistic test data
+
+**What Needs Attention:**
+- 🔴 Auth service still has mocked fallback logic
+- 🟠 Grade upload uses N+1 requests (needs batch endpoint)
+- 🟡 Chat feature not implemented
+- 🟡 No JWT refresh token (hard 24h logout)
+
+---
+
 ### 1. 🔑 `user.role` Must Be a String Name — Not an ID
 
 The frontend reads `user.role` as a **string** (e.g., `"Super Admin"`, `"Teacher"`) directly from the login response and stores it in `localStorage`.
@@ -362,10 +386,12 @@ allowedRoles.includes(user.role)               // Route guard
 - The login response's `user` object must include **both** `role: "Super Admin"` AND `roleId: 1`
 - If you change role name strings, the frontend will break silently (access denied for everyone)
 
-**Exact role name strings the frontend expects — do not rename:**
+### Exact role name strings the frontend expects — do not rename:
 ```
 "Super Admin" | "Admin" | "Academic Admin" | "Teacher" | "Fees Admin" | "Users Admin" | "Parent"
 ```
+
+> ⚠️ **Note**: These are the roles currently seeded in the database. The SRS mentions additional roles (Registrar, Accountant, Student) but they are NOT implemented in the current codebase.
 
 ---
 

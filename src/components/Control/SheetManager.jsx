@@ -9,6 +9,7 @@ export default function SheetManager() {
     // ─── Raw Data ─────────────────────────────────────
     const [subjects, setSubjects] = useState([]);
     const [allClasses, setAllClasses] = useState([]);
+    const [schedules, setSchedules] = useState([]); // Timetable entries
 
     // ─── Selection ────────────────────────────────────
     const [selectedStage, setSelectedStage] = useState('');
@@ -30,12 +31,17 @@ export default function SheetManager() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [subjectsData, classesData] = await Promise.all([
+                const [subjectsData, classesData, schedulesData] = await Promise.all([
                     api.getSubjects(),
                     api.getClasses(),
+                    api.getSchedules(),
                 ]);
+                console.log('[SheetManager] Fetched subjects:', subjectsData);
+                console.log('[SheetManager] Fetched classes:', classesData);
+                console.log('[SheetManager] Fetched schedules:', schedulesData);
                 setSubjects(subjectsData || []);
                 setAllClasses(classesData || []);
+                setSchedules(schedulesData || []);
             } catch (err) {
                 console.error('Failed to fetch data:', err);
             }
@@ -47,7 +53,17 @@ export default function SheetManager() {
     /** Classes filtered by selected stage */
     const filteredClasses = useMemo(() => {
         if (!selectedStage) return [];
-        return allClasses.filter(c => c.stage === selectedStage);
+        // Map frontend stage values to backend stage values
+        const stageMap = {
+            'PRIMARY': 'primary',
+            'PREP': 'preparatory',
+            'SECONDARY': 'secondary'
+        };
+        const backendStage = stageMap[selectedStage] || selectedStage.toLowerCase();
+        console.log('[SheetManager] Filtering classes:', { selectedStage, backendStage, allClasses });
+        const result = allClasses.filter(c => c.stage === backendStage);
+        console.log('[SheetManager] Filtered classes result:', result);
+        return result;
     }, [selectedStage, allClasses]);
 
     /** Selected class object */
@@ -56,11 +72,21 @@ export default function SheetManager() {
         [allClasses, selectedClass]
     );
 
-    /** Subjects filtered by selected class's curriculum (type-safe comparison) */
+    /** Subjects - filter by subjects that have timetable entries for the selected class */
     const filteredSubjects = useMemo(() => {
-        if (!selectedClassObj || !selectedClassObj.subjectIds) return [];
-        return subjects.filter(s => selectedClassObj.subjectIds.includes(parseInt(s.id, 10)));
-    }, [selectedClassObj, subjects]);
+        if (!selectedClass) return subjects;
+        
+        // Get unique subjectIds from timetable entries for this class
+        const classSubjectIds = [...new Set(
+            schedules
+                .filter(s => s.classId === parseInt(selectedClass, 10))
+                .map(s => s.subjectId)
+                .filter(id => id != null)
+        )];
+        
+        // Return subjects that are in this class's timetable
+        return subjects.filter(s => classSubjectIds.includes(parseInt(s.id, 10)));
+    }, [selectedClass, subjects, schedules]);
 
     /** Selected subject object */
     const selectedSubjectObj = useMemo(

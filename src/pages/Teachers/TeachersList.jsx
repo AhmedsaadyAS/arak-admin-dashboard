@@ -1,15 +1,22 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, Plus, Phone, Mail, Download, Send, Edit2 } from 'lucide-react';
+import { Search, Plus, Phone, Mail, Download, Send, Edit2, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../services/api';
 import { useRefresh } from '../../context/RefreshContext';
+import { useAuth } from '../../context/AuthContext';
+import { PERMISSIONS } from '../../config/permissions';
 import TableSkeleton from '../../components/common/TableSkeleton';
+import ConfirmModal from '../../components/common/ConfirmModal';
+import DeleteWarningModal from '../../components/common/DeleteWarningModal';
 import AddEditTeacher from './AddEditTeacher';
 import './TeachersList.css';
 
 export default function TeachersList() {
     const navigate = useNavigate();
     const { refreshKey } = useRefresh();
+    const { hasPermission } = useAuth();
+
+    const canDeleteTeacher = hasPermission(PERMISSIONS.DELETE_TEACHER);
 
     // Filters State
     const [searchTerm, setSearchTerm] = useState('');
@@ -25,6 +32,12 @@ export default function TeachersList() {
     // Edit Mode State
     const [isEditing, setIsEditing] = useState(false);
     const [currentTeacher, setCurrentTeacher] = useState(null);
+
+    // Delete Modal State
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showDeleteWarning, setShowDeleteWarning] = useState(false);
+    const [teacherToDelete, setTeacherToDelete] = useState(null);
+    const [deleteDependencies, setDeleteDependencies] = useState(null);
 
     // Fetch Data
     useEffect(() => {
@@ -59,10 +72,10 @@ export default function TeachersList() {
     // Filter Logic
     const filteredTeachers = useMemo(() => {
         return teachers.filter(teacher => {
-            const name = teacher.name?.toLowerCase() || '';
-            const subject = teacher.subject?.toLowerCase() || '';
-            const email = teacher.email?.toLowerCase() || '';
-            const teacherId = teacher.teacherId?.toLowerCase() || '';
+            const name = teacher.name?.toString().toLowerCase() || '';
+            const subject = teacher.subject?.toString().toLowerCase() || '';
+            const email = teacher.email?.toString().toLowerCase() || '';
+            const teacherId = teacher.teacherId?.toString().toLowerCase() || '';
             const searchLower = searchTerm.toLowerCase();
 
             const matchesSearch = searchTerm === '' ||
@@ -90,18 +103,23 @@ export default function TeachersList() {
         setIsEditing(true);
     };
 
-    const handleSaveTeacher = (teacherData) => {
-        if (currentTeacher) {
-            setTeachers(teachers.map(t => t.id === currentTeacher.id ? { ...t, ...teacherData } : t));
-        } else {
-            const newTeacher = {
-                id: teachers.length + 1,
-                ...teacherData
-            };
-            setTeachers([newTeacher, ...teachers]);
+    const handleSaveTeacher = async (teacherData) => {
+        try {
+            if (currentTeacher) {
+                await api.updateTeacher(currentTeacher.id, teacherData);
+            } else {
+                await api.createTeacher(teacherData);
+            }
+            setIsEditing(false);
+            setCurrentTeacher(null);
+            
+            // Refresh data from server
+            const freshData = await api.getTeachers();
+            setTeachers(freshData);
+        } catch (error) {
+            console.error("Failed to save teacher:", error);
+            alert("Error saving teacher. Check console for details.");
         }
-        setIsEditing(false);
-        setCurrentTeacher(null);
     };
 
     const handleCall = (teacherName, e) => {
@@ -120,6 +138,61 @@ export default function TeachersList() {
 
     const handleBulkEmail = () => {
         alert(`Composing email to ${filteredTeachers.length} teachers...`);
+    };
+
+    const handleDeleteTeacher = async (teacher, e) => {
+        e.stopPropagation();
+        if (!canDeleteTeacher) {
+            alert('You do not have permission to delete teachers.');
+            return;
+        }
+        
+        setTeacherToDelete(teacher);
+        setDeleteDependencies(null);
+        
+        try {
+            // Check dependencies first
+            const [classes, tasks, schedules] = await Promise.all([
+                api.client.get('/classes', { params: { teacherId: teacher.id } }),
+                api.client.get('/tasks', { params: { teacherId: teacher.id } }),
+                api.client.get('/schedules', { params: { teacherId: teacher.id } })
+            ]);
+
+            const dependencies = {
+                classes: classes.data?.length || 0,
+                tasks: tasks.data?.length || 0,
+                schedules: schedules.data?.length || 0
+            };
+
+            const totalDeps = dependencies.classes + dependencies.tasks + dependencies.schedules;
+
+            if (totalDeps > 0) {
+                setDeleteDependencies(dependencies);
+                setShowDeleteWarning(true);
+            } else {
+                setShowDeleteModal(true);
+            }
+        } catch (err) {
+            console.error('Failed to check dependencies:', err);
+            setShowDeleteModal(true);
+        }
+    };
+
+    const confirmDeleteTeacher = async () => {
+        if (!teacherToDelete) return;
+        
+        try {
+            await api.deleteTeacher(teacherToDelete.id);
+            setTeachers(teachers.filter(t => t.id !== teacherToDelete.id));
+            setShowDeleteModal(false);
+            setTeacherToDelete(null);
+        } catch (err) {
+            console.error('Failed to delete teacher:', err);
+            const errorMsg = err.response?.data?.message || err.message || 'Failed to delete teacher';
+            alert(errorMsg);
+            setShowDeleteModal(false);
+            setTeacherToDelete(null);
+        }
     };
 
     const handleViewDetails = (id) => {
@@ -244,7 +317,7 @@ export default function TeachersList() {
                                     <td>
                                         <div className="teacher-info">
                                             <div className="teacher-avatar">
-                                                {teacher.name.charAt(0)}
+                                                {(teacher.name || "T").charAt(0)}
                                             </div>
                                             <div className="teacher-details">
                                                 <h4>{teacher.name}</h4>
@@ -285,6 +358,15 @@ export default function TeachersList() {
                                             >
                                                 <Edit2 size={18} />
                                             </button>
+                                            {canDeleteTeacher && (
+                                                <button
+                                                    className="icon-btn-sm btn-delete"
+                                                    onClick={(e) => handleDeleteTeacher(teacher, e)}
+                                                    title="Delete Teacher"
+                                                >
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            )}
                                         </div>
                                     </td>
                                 </tr>
@@ -319,6 +401,32 @@ export default function TeachersList() {
                     </tbody>
                 </table>
             </div>
+            
+            {/* Delete Confirmation Modal */}
+            <ConfirmModal
+                isOpen={showDeleteModal}
+                title="Delete Teacher"
+                message={`Are you sure you want to delete "${teacherToDelete?.name}"? This action cannot be undone.`}
+                onConfirm={confirmDeleteTeacher}
+                onCancel={() => {
+                    setShowDeleteModal(false);
+                    setTeacherToDelete(null);
+                }}
+                variant="danger"
+            />
+            
+            {/* Delete Warning Modal (when dependencies exist) */}
+            <DeleteWarningModal
+                isOpen={showDeleteWarning}
+                entityType="teacher"
+                entityName={teacherToDelete?.name}
+                dependencies={deleteDependencies}
+                onCancel={() => {
+                    setShowDeleteWarning(false);
+                    setTeacherToDelete(null);
+                    setDeleteDependencies(null);
+                }}
+            />
         </section>
     );
 }

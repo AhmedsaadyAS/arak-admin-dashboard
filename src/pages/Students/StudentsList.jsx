@@ -1,11 +1,15 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Search, Plus, Phone, Mail, Download, Edit2 } from 'lucide-react';
+import { Search, Plus, Phone, Mail, Download, Edit2, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../services/api';
 import { dataIntegrityService } from '../../services/dataIntegrityService';
 import { useRefresh } from '../../context/RefreshContext';
+import { useAuth } from '../../context/AuthContext';
+import { PERMISSIONS } from '../../config/permissions';
 import TableSkeleton from '../../components/common/TableSkeleton';
 import Pagination from '../../components/common/Pagination';
+import ConfirmModal from '../../components/common/ConfirmModal';
+import DeleteWarningModal from '../../components/common/DeleteWarningModal';
 import AddEditStudent from './AddEditStudent';
 import './StudentsList.css';
 
@@ -14,6 +18,9 @@ const ITEMS_PER_PAGE = 5;
 export default function StudentsList() {
     const navigate = useNavigate();
     const { refreshKey } = useRefresh();
+    const { hasPermission } = useAuth();
+
+    const canDeleteStudent = hasPermission(PERMISSIONS.DELETE_STUDENT);
 
     // Search & Filter State
     const [searchTerm, setSearchTerm] = useState('');
@@ -31,6 +38,12 @@ export default function StudentsList() {
     // Edit Mode State
     const [isEditing, setIsEditing] = useState(false);
     const [currentStudent, setCurrentStudent] = useState(null);
+
+    // Delete Modal State
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showDeleteWarning, setShowDeleteWarning] = useState(false);
+    const [studentToDelete, setStudentToDelete] = useState(null);
+    const [deleteDependencies, setDeleteDependencies] = useState(null);
 
     /**
      * Fetch Students from API with Server-Side Pagination
@@ -148,6 +161,60 @@ export default function StudentsList() {
     const handleExport = useCallback(() => {
         alert(`Exporting ${totalStudents} students to CSV...`);
     }, [totalStudents]);
+
+    const handleDeleteStudent = useCallback(async (student, e) => {
+        e.stopPropagation();
+        if (!canDeleteStudent) {
+            alert('You do not have permission to delete students.');
+            return;
+        }
+        
+        setStudentToDelete(student);
+        setDeleteDependencies(null);
+        
+        try {
+            // Check dependencies first
+            const [attendance, evaluations] = await Promise.all([
+                api.client.get('/attendance', { params: { studentId: student.id } }),
+                api.client.get('/evaluations', { params: { studentId: student.id } })
+            ]);
+
+            const dependencies = {
+                attendance: attendance.data?.length || 0,
+                evaluations: evaluations.data?.length || 0
+            };
+
+            const totalDeps = dependencies.attendance + dependencies.evaluations;
+
+            if (totalDeps > 0) {
+                setDeleteDependencies(dependencies);
+                setShowDeleteWarning(true);
+            } else {
+                setShowDeleteModal(true);
+            }
+        } catch (err) {
+            console.error('Failed to check dependencies:', err);
+            // Proceed with delete confirmation anyway
+            setShowDeleteModal(true);
+        }
+    }, [canDeleteStudent]);
+
+    const confirmDeleteStudent = useCallback(async () => {
+        if (!studentToDelete) return;
+        
+        try {
+            await api.deleteStudent(studentToDelete.id);
+            setStudents(students.filter(s => s.id !== studentToDelete.id));
+            setShowDeleteModal(false);
+            setStudentToDelete(null);
+        } catch (err) {
+            console.error('Failed to delete student:', err);
+            const errorMsg = err.response?.data?.message || err.message || 'Failed to delete student';
+            alert(errorMsg);
+            setShowDeleteModal(false);
+            setStudentToDelete(null);
+        }
+    }, [studentToDelete, students]);
 
     const handleViewDetails = useCallback((id) => {
         navigate(`/students/${id}`);
@@ -290,6 +357,15 @@ export default function StudentsList() {
                                                 >
                                                     <Edit2 size={18} />
                                                 </button>
+                                                {canDeleteStudent && (
+                                                    <button
+                                                        className="icon-btn-sm btn-delete"
+                                                        onClick={(e) => handleDeleteStudent(student, e)}
+                                                        title="Delete Student"
+                                                    >
+                                                        <Trash2 size={18} />
+                                                    </button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
@@ -323,6 +399,32 @@ export default function StudentsList() {
                     )}
                 </div>
             )}
+            
+            {/* Delete Confirmation Modal */}
+            <ConfirmModal
+                isOpen={showDeleteModal}
+                title="Delete Student"
+                message={`Are you sure you want to delete "${studentToDelete?.name}"? This action cannot be undone.`}
+                onConfirm={confirmDeleteStudent}
+                onCancel={() => {
+                    setShowDeleteModal(false);
+                    setStudentToDelete(null);
+                }}
+                variant="danger"
+            />
+            
+            {/* Delete Warning Modal (when dependencies exist) */}
+            <DeleteWarningModal
+                isOpen={showDeleteWarning}
+                entityType="student"
+                entityName={studentToDelete?.name}
+                dependencies={deleteDependencies}
+                onCancel={() => {
+                    setShowDeleteWarning(false);
+                    setStudentToDelete(null);
+                    setDeleteDependencies(null);
+                }}
+            />
         </section>
     );
 }
