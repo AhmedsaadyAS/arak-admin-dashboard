@@ -35,8 +35,9 @@
 ### Prerequisites
 - **Node.js** 18+ and npm
 - **.NET 9 SDK**
-- **SQL Server** 2019+
+- **SQL Server** 2019+ (Express, Developer, or Standard)
 - **Git**
+- **EF Core CLI Tool** - Install via: `dotnet tool install --global dotnet-ef`
 
 ### 1-Minute Setup
 
@@ -52,10 +53,11 @@ npm install
 # Update the ConnectionStrings.DefaultConnection with your SQL Server credentials
 
 # 4. Apply database migrations
-cd arak-backend/Arak.PLL
-dotnet ef database update
+cd arak-backend
+dotnet ef database update --project Arak.DAL --startup-project Arak.PLL
 
 # 5. Start the backend (runs on port 5000)
+cd Arak.PLL
 dotnet run
 
 # 6. In a new terminal, start the frontend (runs on port 5173)
@@ -217,6 +219,7 @@ npm run dev
 # Clone repository
 git clone <repository-url>
 cd arak-admin-dashboard
+```
 
 ### Step 2: Install Frontend Dependencies
 
@@ -224,7 +227,13 @@ cd arak-admin-dashboard
 npm install
 ```
 
-### Step 3: Configure Backend Database
+### Step 3: Install EF Core CLI Tool
+
+```bash
+dotnet tool install --global dotnet-ef
+```
+
+### Step 4: Configure Backend Database
 
 Edit `arak-backend/Arak.PLL/appsettings.json`:
 
@@ -236,11 +245,17 @@ Edit `arak-backend/Arak.PLL/appsettings.json`:
 }
 ```
 
-### Step 4: Apply Database Migrations
+**SQL Server Connection String Options:**
+- **Local SQL Server**: `Server=.;Database=ArakDB;Integrated Security=True;TrustServerCertificate=True;`
+- **SQL Server Express**: `Server=.\SQLEXPRESS;Database=ArakDB;...`
+- **Named Instance**: `Server=YOUR_PC_NAME\SQLEXPRESS;Database=ArakDB;...`
+- **Remote Server**: `Server=192.168.1.100;Database=ArakDB;User Id=sa;Password=yourpassword;...`
+
+### Step 5: Apply Database Migrations
 
 ```bash
-cd arak-backend/Arak.PLL
-dotnet ef database update
+cd arak-backend
+dotnet ef database update --project Arak.DAL --startup-project Arak.PLL
 ```
 
 This will:
@@ -248,7 +263,7 @@ This will:
 - Run all migrations
 - Seed initial data (roles, admin users, sample classes/students/teachers)
 
-### Step 5: Start Backend Server
+### Step 6: Start Backend Server
 
 ```bash
 # From arak-backend/Arak.PLL
@@ -257,7 +272,7 @@ dotnet run
 
 The backend will start on **http://localhost:5000**
 
-### Step 6: Start Frontend Development Server
+### Step 7: Start Frontend Development Server
 
 ```bash
 # From project root
@@ -270,10 +285,21 @@ The frontend will start on **http://localhost:5173** and open in your browser.
 
 ## 🔧 Configuration
 
-### Environment Variables
+### Frontend Environment Variables
 
-Create a `.env` file in the project root:
+A `.env.example` file is provided as a template. Copy it to `.env`:
 
+```bash
+cp .env.example .env
+```
+
+**Available variables:**
+
+| Variable | Purpose | Default |
+|----------|---------|---------|
+| `VITE_API_BASE_URL` | Backend API base URL | `http://localhost:5000/api` |
+
+Example `.env` file:
 ```env
 # Backend API URL
 VITE_API_BASE_URL=http://localhost:5000/api
