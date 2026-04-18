@@ -51,7 +51,7 @@ npm install
 
 # 3. Configure database (edit arak-backend/Arak.PLL/appsettings.json)
 # Update the ConnectionStrings.DefaultConnection with your SQL Server credentials
-
+my need "dotnet restore"
 # 4. Apply database migrations
 cd arak-backend
 dotnet ef database update --project Arak.DAL --startup-project Arak.PLL
