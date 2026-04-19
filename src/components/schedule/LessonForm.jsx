@@ -136,8 +136,12 @@ export default function LessonForm({ isOpen, onClose, onSave, initialData = null
             classId: parseInt(formData.classId),
             subjectId: parseInt(formData.subjectId),
             teacherId: parseInt(formData.teacherId),
-            dayOfWeek: parseInt(formData.dayOfWeek)
+            dayOfWeek: parseInt(formData.dayOfWeek),
+            Location: formData.room,
+            startTime: formData.startTime.length === 5 ? `${formData.startTime}:00` : formData.startTime,
+            endTime: formData.endTime.length === 5 ? `${formData.endTime}:00` : formData.endTime
         };
+        delete newLesson.room; // Remove invalid frontend-specific property
 
         // Add ID only if editing (for conflict detection)
         if (initialData) {
