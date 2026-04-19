@@ -15,7 +15,8 @@ import {
     Award,
     BookOpen,
     FileSpreadsheet,
-    School
+    School,
+    ClipboardList
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { PERMISSIONS } from "../../config/permissions";
@@ -51,6 +52,13 @@ const menuItems = [
         path: "/schedule",
         icon: <CalendarDays size={20} />,
         permission: PERMISSIONS.SCHEDULE
+    },
+    {
+        key: "attendance",
+        label: "Attendance",
+        path: "/attendance",
+        icon: <ClipboardList size={20} />,
+        permission: PERMISSIONS.STUDENTS
     },
     {
         key: "events",

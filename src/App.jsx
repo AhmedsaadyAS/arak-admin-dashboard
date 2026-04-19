@@ -27,6 +27,8 @@ import Schedule from "./pages/Schedule/Schedule";
 import ErrorBoundary from "./components/common/ErrorBoundary";
 import SheetManager from "./components/Control/SheetManager";
 import GradesPage from "./pages/Grades/GradesPage";
+import Attendance from "./pages/Attendance";
+import AttendanceStudentDetails from "./pages/AttendanceStudentDetails";
 import { PERMISSIONS } from "./config/permissions"; // Import permissions
 import "./styles/global.css";
 import "./styles/layout.css";
@@ -203,6 +205,22 @@ export default function App() {
                                 <ProtectedRoute requiredPermission={PERMISSIONS.GRADES}>
                                     <Layout title="Grades & Classes">
                                         <GradesPage />
+                                    </Layout>
+                                </ProtectedRoute>
+                            } />
+
+                            <Route path="/attendance" element={
+                                <ProtectedRoute requiredPermission={PERMISSIONS.STUDENTS}>
+                                    <Layout title="Attendance Overview">
+                                        <Attendance />
+                                    </Layout>
+                                </ProtectedRoute>
+                            } />
+
+                            <Route path="/attendance/student/:studentId" element={
+                                <ProtectedRoute requiredPermission={PERMISSIONS.STUDENTS}>
+                                    <Layout title="Student Attendance">
+                                        <AttendanceStudentDetails />
                                     </Layout>
                                 </ProtectedRoute>
                             } />

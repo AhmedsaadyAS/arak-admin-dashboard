@@ -347,4 +347,45 @@ export const api = {
         const response = await apiClient.delete(`/evaluations/${id}`);
         return response.data;
     },
+
+    // --- Attendance ---
+
+    getAttendanceByClass: async (classId, date, page = 1, pageSize = 30) => {
+        const response = await apiClient.get(`/attendance/class/${classId}`, {
+            params: { date, page, pageSize }
+        });
+        return response.data;
+    },
+
+    markAttendance: async (data) => {
+        const response = await apiClient.post('/attendance', data);
+        return response.data;
+    },
+
+    bulkMarkAttendance: async (data) => {
+        const response = await apiClient.post('/attendance/bulk', data);
+        return response.data;
+    },
+
+    updateAttendance: async (id, data) => {
+        const response = await apiClient.put(`/attendance/${id}`, data);
+        return response.data;
+    },
+
+    getStudentAttendanceByMonth: async (studentId, month, year) => {
+        const response = await apiClient.get(`/attendance/student/${studentId}`, {
+            params: { month, year }
+        });
+        return response.data;
+    },
+
+    getStudentAttendanceStats: async (studentId) => {
+        const response = await apiClient.get(`/attendance/student/${studentId}/stats`);
+        return response.data;
+    },
+
+    bulkUpdateTimeOut: async (data) => {
+        const response = await apiClient.put('/attendance/bulk-timeout', data);
+        return response.data;
+    },
 };
