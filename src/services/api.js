@@ -296,7 +296,7 @@ export const api = {
     },
 
     updateParent: async (id, parentData) => {
-        const response = await apiClient.patch(`/parents/${id}`, parentData);
+        const response = await apiClient.put(`/parents/${id}`, parentData);
         return response.data;
     },
 

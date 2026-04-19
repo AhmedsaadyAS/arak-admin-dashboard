@@ -241,9 +241,10 @@ All delete operations handle these error scenarios:
 2. ✅ `src/pages/Students/StudentsList.jsx` - Added delete functionality
 3. ✅ `src/pages/Teachers/TeachersList.jsx` - Added delete functionality
 
-### Backend (0 files):
-- All delete endpoints already existed and required no changes
-- Backend is fully functional and supports all delete operations
+### Backend (2 files modified):
+1. ✅ `arak-backend/Arak.PLL/Controllers/UsersController.cs` - Fixed EF Core 500 Internal Server error by manually clearing `AspNetUserRoles`, `AspNetUserClaims`, etc. before calling `UserManager.DeleteAsync()`. Wrapped deletion in EF Core Transaction.
+2. ✅ `arak-backend/Arak.PLL/Controllers/ParentsController.cs` - Fixed 500 Foreign Key constraint errors by properly unlinking `Students` (setting `ParentId = null`) before deleting the Parent row. Also added manual deletion of Identity child rows.
+3. ✅ `arak-backend/Arak.DAL/Database/AppDbContext.cs` - Fixed global `Restrict` cascade rules mapping.
 
 ---
 

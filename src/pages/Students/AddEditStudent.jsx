@@ -91,7 +91,11 @@ export default function AddEditStudent({ student, onBack, onSave }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        onSave(formData);
+        const payload = { ...formData };
+        if (payload.parentId === '') {
+            payload.parentId = null;
+        }
+        onSave(payload);
     };
 
     return (
@@ -289,13 +293,12 @@ export default function AddEditStudent({ student, onBack, onSave }) {
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
                         {/* Parent Selector */}
                         <div style={{ gridColumn: 'span 2' }}>
-                            <label htmlFor="parentId" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Select Parent *</label>
+                            <label htmlFor="parentId" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Select Parent</label>
                             <select
                                 id="parentId"
                                 name="parentId"
                                 value={formData.parentId}
                                 onChange={handleParentSelect}
-                                required
                                 style={{ width: '100%', padding: '0.75rem', border: '1px solid #e5e7eb', borderRadius: '8px', background: 'white' }}
                             >
                                 <option value="">-- Choose a parent --</option>

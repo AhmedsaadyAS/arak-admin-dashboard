@@ -72,10 +72,17 @@ export default function UserManagement() {
     });
 
     // Filter parent users
-    const filteredParents = parents.filter(parent => {
-        const parentName = parent?.parentName || '';
-        const username = parent?.username || '';
-        const email = parent?.email || '';
+    // Backend ParentDto returns 'name' (not 'parentName'). Normalize for filtering.
+    const filteredParents = parents.map(p => ({
+        ...p,
+        parentName: p.parentName ?? p.name ?? '',   // normalize for table display
+        username:   p.username ?? '',
+        phone:      p.phone ?? p.phoneNumber ?? '',
+        linkedStudents: p.linkedStudents ?? p.studentIds ?? [],
+    })).filter(parent => {
+        const parentName = parent.parentName;
+        const username = parent.username;
+        const email = parent.email ?? '';
         const matchesSearch = parentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
             username.toLowerCase().includes(searchTerm.toLowerCase()) ||
             email.toLowerCase().includes(searchTerm.toLowerCase());
@@ -155,37 +162,47 @@ export default function UserManagement() {
     const handleSaveUser = async (userData, userType) => {
         try {
             if (userType === 'admin') {
+                // Derive role name string from the roleId chosen in the form
+                const chosenRole = roles.find(r => String(r.id) === String(userData.roleId));
+                const roleNameStr = chosenRole?.name ?? userData.role ?? '';
+
+                // Backend UpdateUserDto accepts: name, phoneNumber, address, role (string)
+                // Backend CreateUserDto accepts: name, email, password, role (string)
+                const backendPayload = {
+                    name:  userData.name,
+                    email: userData.email,
+                    role:  roleNameStr,
+                    ...(userData.password ? { password: userData.password } : {}),
+                };
+
                 if (currentEditUser) {
-                    // Update existing admin
-                    const updatedUser = await api.updateUser(currentEditUser.id, userData);
+                    // PATCH /api/users/{id}
+                    const updatedUser = await api.updateUser(currentEditUser.id, backendPayload);
                     setAdminUsers(adminUsers.map(u => u.id === currentEditUser.id ? updatedUser : u));
                 } else {
-                    // Add new admin
-                    const newAdmin = {
-                        status: 'Active',
-                        lastLogin: 'Never',
-                        ...userData
-                    };
-                    const createdUser = await api.createUser(newAdmin);
+                    // POST /api/users
+                    const createdUser = await api.createUser(backendPayload);
                     setAdminUsers([...adminUsers, createdUser]);
                 }
             } else {
                 let savedParent;
-                const oldLinkedStudents = currentEditUser?.linkedStudents || [];
+                const oldLinkedStudents = currentEditUser?.studentIds ?? currentEditUser?.linkedStudents ?? [];
+
+                // Backend CreateParentDto expects: name, email, phone, address
+                const parentPayload = {
+                    name:    userData.parentName,
+                    email:   userData.email,
+                    phone:   userData.phone,
+                    address: userData.address ?? '',
+                };
 
                 if (currentEditUser) {
-                    // Update existing parent
-                    savedParent = await api.updateParent(currentEditUser.id, userData);
+                    // PUT /api/parents/{id}
+                    savedParent = await api.updateParent(currentEditUser.id, parentPayload);
                     setParents(parents.map(p => p.id === currentEditUser.id ? savedParent : p));
                 } else {
-                    // Add new parent
-                    const newParent = {
-                        status: 'Active',
-                        lastLogin: 'Never',
-                        createdAt: new Date().toISOString().split('T')[0],
-                        ...userData
-                    };
-                    savedParent = await api.createParent(newParent);
+                    // POST /api/parents
+                    savedParent = await api.createParent(parentPayload);
                     setParents([...parents, savedParent]);
                 }
 
@@ -196,7 +213,10 @@ export default function UserManagement() {
             setCurrentEditUser(null);
         } catch (err) {
             console.error('Failed to save user:', err);
-            const errorMsg = err.response?.data?.message || err.response?.data?.errors?.[0] || err.message || 'Failed to save user. Please try again.';
+            const errorMsg = err.response?.data?.message
+                ?? (Array.isArray(err.response?.data?.errors) ? err.response.data.errors.join(', ') : null)
+                ?? err.message
+                ?? 'Failed to save user. Please try again.';
             alert(errorMsg);
         }
     };

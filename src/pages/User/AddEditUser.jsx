@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { getPermissionsForRole, getRoleDescription, PERMISSIONS } from '../../config/permissions';
 import '../../styles/layout.css';
 import '../Dashboard/dashboard.css';
@@ -85,25 +85,43 @@ export default function AddEditUser({ user, userType, currentUserRole, onBack, o
     const isAdminMode = userType === 'admin';
     const isParentMode = userType === 'parent';
 
+    // Resolve roleId from user.role string (backend returns role as a name string, not an ID)
+    const resolvedRoleId = isAdminMode && user && user.role
+        ? (roles.find(r => r.name === user.role)?.id ?? roles[0]?.id ?? '')
+        : (roles[0]?.id ?? '');
+
     // Admin form state
     const [adminFormData, setAdminFormData] = useState({
         name: isAdminMode && user ? user.name : '',
         email: isAdminMode && user ? user.email : '',
         password: '',
-        roleId: isAdminMode && user ? user.roleId : 2, // Default to School Administrator
-        status: isAdminMode && user ? user.status : 'Active'
+        roleId: resolvedRoleId,
+        status: isAdminMode && user ? (user.isActive ? 'Active' : 'Inactive') : 'Active'
     });
 
     // Parent form state
+    // Backend ParentDto fields: id, name, email, phoneNumber, studentIds
     const [parentFormData, setParentFormData] = useState({
-        parentName: isParentMode && user ? user.parentName : '',
-        username: isParentMode && user ? user.username : '',
+        parentName: isParentMode && user ? (user.name ?? user.parentName ?? '') : '',
+        username: isParentMode && user ? (user.username ?? '') : '',
         email: isParentMode && user ? user.email : '',
-        phone: isParentMode && user ? user.phone : '',
+        phone: isParentMode && user ? (user.phoneNumber ?? user.phone ?? '') : '',
         password: '',
-        linkedStudents: isParentMode && user ? user.linkedStudents : [],
-        status: isParentMode && user ? user.status : 'Active'
+        linkedStudents: isParentMode && user ? (user.studentIds ?? user.linkedStudents ?? []) : [],
+        status: isParentMode && user ? (user.status ?? 'Active') : 'Active'
     });
+
+    // Re-sync roleId when roles finally load from API (async — they start as [])
+    useEffect(() => {
+        if (!isAdminMode || !roles || roles.length === 0) return;
+        setAdminFormData(prev => {
+            // If already set to a valid role ID, don't overwrite
+            if (roles.find(r => String(r.id) === String(prev.roleId))) return prev;
+            // Try to match by the user's role name
+            const matched = user?.role ? roles.find(r => r.name === user.role) : null;
+            return { ...prev, roleId: matched?.id ?? roles[0]?.id ?? prev.roleId };
+        });
+    }, [roles]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Student search and filter state
     const [studentSearchTerm, setStudentSearchTerm] = useState('');
@@ -144,13 +162,13 @@ export default function AddEditUser({ user, userType, currentUserRole, onBack, o
         });
     }, [studentSearchTerm, gradeFilter, students]);
 
-    // Filter roles based on current user's role
+    // Filter roles for admin assignment:
+    // Exclude domain-only roles (Parent, Teacher) that should never be manually assigned to admin users.
+    const ADMIN_ASSIGNABLE_ROLES = ['Super Admin', 'Admin', 'Academic Admin', 'Fees Admin', 'Users Admin'];
     const availableRoles = roles.filter(role => {
-        if (currentUserRole === "Super Admin") {
-            return true; // Super Admin can assign all roles
-        }
-        // Non-Super Admins cannot create Super Admins
-        return role.name !== "Super Admin";
+        if (!ADMIN_ASSIGNABLE_ROLES.includes(role.name)) return false; // exclude Teacher, Parent, etc.
+        if (currentUserRole === 'Super Admin') return true;             // Super Admin sees all admin roles
+        return role.name !== 'Super Admin';                              // others cannot assign Super Admin
     });
 
     const handleSubmit = (e) => {
@@ -255,7 +273,7 @@ export default function AddEditUser({ user, userType, currentUserRole, onBack, o
                                         id="adminRole"
                                         name="roleId"
                                         value={adminFormData.roleId}
-                                        onChange={(e) => setAdminFormData({ ...adminFormData, roleId: parseInt(e.target.value) })}
+                                        onChange={(e) => setAdminFormData({ ...adminFormData, roleId: e.target.value })}
                                         style={{ width: '100%', padding: '0.75rem', border: '1px solid #e5e7eb', borderRadius: '8px' }}
                                     >
                                         {availableRoles.map(role => (
@@ -421,9 +439,9 @@ export default function AddEditUser({ user, userType, currentUserRole, onBack, o
 
                             {/* Linked Students */}
                             <div>
-                                <h4 style={{ marginBottom: '1rem' }}>Linked Students *</h4>
+                                <h4 style={{ marginBottom: '1rem' }}>Linked Students</h4>
                                 <p style={{ fontSize: '0.9rem', color: 'var(--text-gray)', marginBottom: '1rem' }}>
-                                    Select which students this parent can view and manage in the mobile app:
+                                    Select which students this parent can view and manage in the mobile app (optional):
                                 </p>
 
                                 {/* Search and Quick Actions */}
@@ -505,11 +523,6 @@ export default function AddEditUser({ user, userType, currentUserRole, onBack, o
                                         </div>
                                     )}
                                 </div>
-                                {parentFormData.linkedStudents.length === 0 && (
-                                    <p style={{ color: '#EE3636', fontSize: '0.9rem', marginTop: '0.5rem' }}>
-                                        Please select at least one student
-                                    </p>
-                                )}
                             </div>
                         </>
                     )}
@@ -525,8 +538,7 @@ export default function AddEditUser({ user, userType, currentUserRole, onBack, o
                         </button>
                         <button
                             type="submit"
-                            disabled={isParentMode && parentFormData.linkedStudents.length === 0}
-                            style={{ padding: '0.75rem 2rem', background: isParentMode && parentFormData.linkedStudents.length === 0 ? '#ccc' : 'var(--primary-color)', color: 'white', border: 'none', borderRadius: '8px', cursor: isParentMode && parentFormData.linkedStudents.length === 0 ? 'not-allowed' : 'pointer', fontWeight: '600' }}
+                            style={{ padding: '0.75rem 2rem', background: 'var(--primary-color)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600' }}
                         >
                             {user ? `Update ${isAdminMode ? 'Admin' : 'Parent'}` : `Create ${isAdminMode ? 'Admin' : 'Parent'}`}
                         </button>

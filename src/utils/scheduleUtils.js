@@ -28,12 +28,14 @@ export function getClassSchedule(classId, lessons = [], teachers = [], subjects 
         const teacher = teachers.find(t => t.id == lesson.teacherId);
 
         // SAFEGUARD: Only push if the day exists (0-6)
-        if (schedule[lesson.dayOfWeek]) {
+        if (schedule[lesson.dayOfWeek] !== undefined) {
             schedule[lesson.dayOfWeek].push({
                 ...lesson,
+                // Normalize: backend returns 'location', old data may have 'room'
+                room: lesson.location || lesson.room || '',
                 subjectName: subject?.name || 'Unknown Subject',
-                subjectColor: subject?.color || '#gray',
-                teacherName: teacher?.name || 'Unknown Teacher'
+                subjectColor: subject?.color || '#6c63ff',
+                teacherName: teacher?.name || (lesson.teacherId ? `Teacher #${lesson.teacherId}` : 'No Teacher Assigned')
             });
         }
     });
@@ -73,9 +75,11 @@ export function getTeacherSchedule(teacherId, lessons = [], teachers = [], subje
         const subject = subjects.find(s => s.id == lesson.subjectId);
 
         // SAFEGUARD: Only push if the day exists (0-6)
-        if (schedule[lesson.dayOfWeek]) {
+        if (schedule[lesson.dayOfWeek] !== undefined) {
             schedule[lesson.dayOfWeek].push({
                 ...lesson,
+                // Normalize: backend returns 'location', old data may have 'room'
+                room: lesson.location || lesson.room || '',
                 subjectName: subject?.name || 'Unknown Subject',
                 subjectColor: subject?.color || '#4D44B5'
             });
