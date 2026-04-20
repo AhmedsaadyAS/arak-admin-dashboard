@@ -11,7 +11,6 @@ export default function AttendanceEditModal({ record, onClose, onSave }) {
     const [timeOut, setTimeOut] = useState(record.timeOut ? record.timeOut.substring(0, 5) : '');
     const [notes, setNotes] = useState(record.notes || '');
 
-    const enumMap = { 'Present': 0, 'Absent': 1, 'Late': 2 };
 
     return (
         <div className="att-modal-overlay animate-fade-in">
@@ -58,7 +57,7 @@ export default function AttendanceEditModal({ record, onClose, onSave }) {
                 <div className="modal-footer">
                     <button className="att-btn btn-secondary" onClick={onClose}>Cancel</button>
                     <button className="att-btn btn-primary" onClick={() => onSave({
-                        status: enumMap[status],
+                        status: status,
                         timeIn: timeIn ? `${timeIn}:00` : null,
                         timeOut: timeOut ? `${timeOut}:00` : null,
                         notes

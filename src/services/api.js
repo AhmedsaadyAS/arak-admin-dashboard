@@ -11,6 +11,14 @@ const apiClient = axios.create({
     }
 });
 
+// --- Constants & Helpers ---
+const STATUS_MAP = { 0: 'Present', 1: 'Absent', 2: 'Late' };
+
+const mapRecordStatus = (record) => ({
+    ...record,
+    status: typeof record.status === 'number' ? STATUS_MAP[record.status] : (record.status || 'NotRecorded')
+});
+
 // Request Interceptor: Add Auth Token
 apiClient.interceptors.request.use(
     (config) => {
@@ -350,9 +358,23 @@ export const api = {
 
     // --- Attendance ---
 
-    getAttendanceByClass: async (classId, date, page = 1, pageSize = 30) => {
+    getAttendanceByClass: async (classId, date) => {
         const response = await apiClient.get(`/attendance/class/${classId}`, {
-            params: { date, page, pageSize }
+            params: { date }
+        });
+        
+        // Backend returns ClassAttendanceResponseDto: { classId, date, students[] }
+        const records = (response.data.students || []).map(mapRecordStatus);
+
+        return {
+            data: records,
+            total: records.length
+        };
+    },
+
+    getAttendanceSummary: async (classId, date) => {
+        const response = await apiClient.get(`/attendance/summary/${classId}`, {
+            params: { date }
         });
         return response.data;
     },
@@ -368,7 +390,7 @@ export const api = {
     },
 
     updateAttendance: async (id, data) => {
-        const response = await apiClient.put(`/attendance/${id}`, data);
+        const response = await apiClient.patch(`/attendance/${id}`, data);
         return response.data;
     },
 
@@ -376,16 +398,21 @@ export const api = {
         const response = await apiClient.get(`/attendance/student/${studentId}`, {
             params: { month, year }
         });
-        return response.data;
-    },
-
-    getStudentAttendanceStats: async (studentId) => {
-        const response = await apiClient.get(`/attendance/student/${studentId}/stats`);
+        
+        if (response.data && Array.isArray(response.data.records)) {
+            response.data.records = response.data.records.map(mapRecordStatus);
+        }
+        
         return response.data;
     },
 
     bulkUpdateTimeOut: async (data) => {
         const response = await apiClient.put('/attendance/bulk-timeout', data);
+        return response.data;
+    },
+
+    seedAttendance: async () => {
+        const response = await apiClient.post('/attendance/seed');
         return response.data;
     },
 };

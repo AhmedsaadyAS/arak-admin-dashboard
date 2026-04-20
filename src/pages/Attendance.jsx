@@ -37,6 +37,16 @@ export default function Attendance() {
     const [error, setError] = useState(null);
     const [page, setPage] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
+    const [summary, setSummary] = useState({
+        totalStudents: 0,
+        presentCount: 0,
+        presentRate: 0,
+        absentCount: 0,
+        absentRate: 0,
+        lateCount: 0,
+        lateRate: 0,
+        notRecordedCount: 0
+    });
 
     // --- Modal State ---
     const [showEditModal, setShowEditModal] = useState(false);
@@ -63,45 +73,35 @@ export default function Attendance() {
         fetchFilters();
     }, []);
 
-    // Fetch attendance data
-    const fetchAttendance = useCallback(async () => {
+    // Fetch attendance data and summary
+    const fetchData = useCallback(async () => {
         if (!classFilter) return;
 
         try {
             setLoading(true);
             setError(null);
-            const response = await api.getAttendanceByClass(classFilter, dateFilter, page, ITEMS_PER_PAGE);
-            setAttendanceData(response.data);
-            setTotalItems(response.total);
+            
+            const [listResponse, summaryData] = await Promise.all([
+                api.getAttendanceByClass(classFilter, dateFilter),
+                api.getAttendanceSummary(classFilter, dateFilter)
+            ]);
+
+            setAttendanceData(listResponse.data);
+            setTotalItems(listResponse.total);
+            setSummary(summaryData);
         } catch (err) {
-            setError("Failed to load attendance records.");
+            setError("Failed to load attendance data.");
         } finally {
             setLoading(false);
         }
-    }, [classFilter, dateFilter, page]);
+    }, [classFilter, dateFilter]);
 
     useEffect(() => {
-        fetchAttendance();
-    }, [fetchAttendance]);
+        fetchData();
+    }, [fetchData]);
 
     // --- Computed Stats ---
-    const stats = useMemo(() => {
-        if (attendanceData.length === 0) return { total: 0, present: 0, absent: 0, late: 0 };
-        
-        const counts = {
-            total: attendanceData.length,
-            present: attendanceData.filter(r => r.status === 'Present').length,
-            absent: attendanceData.filter(r => r.status === 'Absent').length,
-            late: attendanceData.filter(r => r.status === 'Late').length
-        };
-
-        return {
-            ...counts,
-            presentPct: Math.round((counts.present / counts.total) * 100) || 0,
-            absentPct: Math.round((counts.absent / counts.total) * 100) || 0,
-            latePct: Math.round((counts.late / counts.total) * 100) || 0
-        };
-    }, [attendanceData]);
+    // (Backend summary used instead of local computation)
 
     // --- Handlers ---
     const handleUpdateRecord = async (updatedData) => {
@@ -118,7 +118,7 @@ export default function Attendance() {
                 await api.updateAttendance(currentRecord.id, updatedData);
             }
             setShowEditModal(false);
-            fetchAttendance();
+            fetchData();
         } catch (err) {
             alert("Failed to update record");
         }
@@ -129,15 +129,16 @@ export default function Attendance() {
             const payload = {
                 classId: parseInt(classFilter, 10),
                 date: dateFilter,
+                session: "Morning",
                 records: attendanceData.map(s => ({
                     studentId: s.studentId,
-                    status: 0, // Present
+                    status: "Present",
                     timeIn: "08:00:00"
                 }))
             };
             await api.bulkMarkAttendance(payload);
             setShowBulkConfirm(false);
-            fetchAttendance();
+            fetchData();
         } catch (err) {
             alert("Bulk update failed");
         }
@@ -150,7 +151,8 @@ export default function Attendance() {
             case 'Present': return 'badge-present';
             case 'Absent': return 'badge-absent';
             case 'Late': return 'badge-late';
-            default: return 'badge-notmarked';
+            case 'NotRecorded': return 'badge-notrecorded';
+            default: return 'badge-notrecorded';
         }
     };
 
@@ -214,7 +216,7 @@ export default function Attendance() {
                     <div className="card-icon"><Users size={22} /></div>
                     <div className="card-data">
                         <span className="card-label">Total Students</span>
-                        <h4 className="card-value">{stats.total}</h4>
+                        <h4 className="card-value">{summary.totalStudents}</h4>
                         <span className="card-subtext">Class Size</span>
                     </div>
                 </div>
@@ -222,24 +224,24 @@ export default function Attendance() {
                     <div className="card-icon"><CheckCircle2 size={22} /></div>
                     <div className="card-data">
                         <span className="card-label">Present</span>
-                        <h4 className="card-value">{stats.present}</h4>
-                        <span className="card-subtext">{stats.presentPct}% rate</span>
+                        <h4 className="card-value">{summary.presentCount}</h4>
+                        <span className="card-subtext">{summary.presentRate.toFixed(0)}% rate</span>
                     </div>
                 </div>
                 <div className="att-stat-card absent">
                     <div className="card-icon"><XCircle size={22} /></div>
                     <div className="card-data">
                         <span className="card-label">Absent</span>
-                        <h4 className="card-value">{stats.absent}</h4>
-                        <span className="card-subtext">{stats.absentPct}% rate</span>
+                        <h4 className="card-value">{summary.absentCount}</h4>
+                        <span className="card-subtext">{summary.absentRate.toFixed(0)}% rate</span>
                     </div>
                 </div>
                 <div className="att-stat-card late">
                     <div className="card-icon"><Clock size={22} /></div>
                     <div className="card-data">
                         <span className="card-label">Late</span>
-                        <h4 className="card-value">{stats.late}</h4>
-                        <span className="card-subtext">{stats.latePct}% rate</span>
+                        <h4 className="card-value">{summary.lateCount}</h4>
+                        <span className="card-subtext">{summary.lateRate.toFixed(0)}% rate</span>
                     </div>
                 </div>
             </div>

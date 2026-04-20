@@ -32,33 +32,28 @@ export default function AttendanceStudentDetails() {
     // Modal State
     const [showEditModal, setShowEditModal] = useState(false);
 
-    // Fetch initial student info
-    useEffect(() => {
-        const fetchStudentInfo = async () => {
-            try {
-                const data = await api.getStudentById(studentId);
-                setStudent(data);
-            } catch (err) {
-                console.error("Failed to fetch student:", err);
-            }
-        };
-        fetchStudentInfo();
-    }, [studentId]);
-
-    // Fetch stats and monthly records
+    // Fetch data (consolidated stats + records)
     const fetchData = useCallback(async () => {
         try {
             setLoading(true);
             const month = viewDate.getMonth() + 1;
             const year = viewDate.getFullYear();
             
-            const [statsData, monthlyRecords] = await Promise.all([
-                api.getStudentAttendanceStats(studentId),
-                api.getStudentAttendanceByMonth(studentId, month, year)
-            ]);
+            const detailData = await api.getStudentAttendanceByMonth(studentId, month, year);
             
-            setStats(statsData);
-            setRecords(monthlyRecords || []);
+            setStats({
+                attendanceRate: detailData.attendanceRate,
+                lateArrivals: detailData.lateArrivals,
+                absences: detailData.absences
+            });
+            setRecords(detailData.records || []);
+            
+            // Sync student info
+            setStudent({
+                name: detailData.studentName,
+                grade: detailData.grade,
+                className: detailData.className
+            });
         } catch (err) {
             console.error("Failed to fetch attendance details:", err);
             setError("Failed to load attendance history.");
