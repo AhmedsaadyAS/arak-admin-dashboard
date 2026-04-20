@@ -52,7 +52,8 @@ export default function AttendanceStudentDetails() {
             setStudent({
                 name: detailData.studentName,
                 grade: detailData.grade,
-                className: detailData.className
+                className: detailData.className,
+                classId: detailData.classId
             });
         } catch (err) {
             console.error("Failed to fetch attendance details:", err);
@@ -122,13 +123,27 @@ export default function AttendanceStudentDetails() {
 
     const handleSaveAttendance = async (updatedData) => {
         try {
+            const formatTime = (timeStr) => {
+                if (!timeStr) return null;
+                // HH:mm -> HH:mm:ss
+                return timeStr.length === 5 ? `${timeStr}:00` : timeStr;
+            };
+
             if (todayRecord && todayRecord.id > 0) {
-                await api.updateAttendance(todayRecord.id, updatedData);
+                await api.updateAttendance(todayRecord.id, {
+                    ...updatedData,
+                    timeIn: formatTime(updatedData.timeIn),
+                    timeOut: formatTime(updatedData.timeOut)
+                });
             } else {
                 await api.markAttendance({
                     studentId: parseInt(studentId, 10),
+                    classId: student?.classId,
                     date: todayStr,
-                    ...updatedData
+                    ...updatedData,
+                    timeIn: formatTime(updatedData.timeIn),
+                    timeOut: formatTime(updatedData.timeOut),
+                    session: updatedData.session || 'Morning'
                 });
             }
             setShowEditModal(false);

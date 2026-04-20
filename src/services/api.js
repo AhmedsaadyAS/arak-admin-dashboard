@@ -380,7 +380,13 @@ export const api = {
     },
 
     markAttendance: async (data) => {
-        const response = await apiClient.post('/attendance', data);
+        // Ensure time format is HH:mm:ss for .NET TimeOnly
+        const payload = {
+            ...data,
+            timeIn: data.timeIn && data.timeIn.length === 5 ? `${data.timeIn}:00` : data.timeIn,
+            timeOut: data.timeOut && data.timeOut.length === 5 ? `${data.timeOut}:00` : data.timeOut
+        };
+        const response = await apiClient.post('/attendance', payload);
         return response.data;
     },
 
