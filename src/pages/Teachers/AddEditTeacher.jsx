@@ -44,11 +44,14 @@ export default function AddEditTeacher({ teacher, onBack, onSave }) {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+
     const handleSubmit = (e) => {
         e.preventDefault();
-        onSave(formData);
+        onSave({
+            ...formData,
+            experience: formData.experience !== '' ? parseInt(formData.experience, 10) : null,
+        });
     };
-
     return (
         <div className="dashboard-page">
             <button onClick={onBack} className="back-button">← Back to Teachers List</button>
