@@ -374,7 +374,7 @@ Set these environment variables to override defaults:
 | **Evaluations** | `GET/POST /evaluations` · `DELETE /evaluations/{id}` | ✅ |
 | **Tasks** | `GET/POST /tasks` · `GET/PATCH/DELETE /tasks/{id}` | ✅ |
 | **Events** | `GET/POST /events` · `PUT/DELETE /events/{id}` | ✅ |
-| **Attendance** | `GET /attendance` | ✅ |
+| **Attendance** | `POST /attendance` · `POST /attendance/bulk` · `GET /attendance/class/{classId}` · `GET /attendance/student/{studentId}` · `PATCH /attendance/{id}` · `PUT /attendance/bulk-timeout` | ✅ Admin/Teacher |
 | **Metrics** | `GET /metrics` | ❌ (Health check) |
 
 ### Response Format
@@ -534,6 +534,15 @@ arak-admin/
 
 ---
 
+## 🔄 Changelog
+
+### v1.2.0 — April 20, 2026
+- ✅ Attendance module fully integrated with live backend APIs
+- ✅ `classId` now passed correctly in `markAttendance` API call
+- ✅ Time format fixed: `HH:mm` → `HH:mm:ss` for .NET `TimeOnly` parsing
+- ✅ `AttendanceStudentDetails.jsx` synced with updated `MarkAttendanceDto` structure
+- ✅ Super Admins and Admins can now mark attendance without a Teacher profile
+
 ## ⚠️ Known Issues
 
 ### 🔴 High Priority
@@ -561,6 +570,8 @@ arak-admin/
 
 6. **GET /metrics Endpoint** - May return incomplete stats
    - **Fix**: Implement `HealthController.cs` with real-time metrics
+
+| Attendance frontend | ✅ Resolved | classId and HH:mm:ss time format fix applied in api.js and AttendanceStudentDetails.jsx |
 
 ---
 
