@@ -373,9 +373,7 @@ export const api = {
     },
 
     getAttendanceSummary: async (classId, date) => {
-        const response = await apiClient.get(`/attendance/summary/${classId}`, {
-            params: { date }
-        });
+        const response = await apiClient.get(`/attendance/summary/${classId}?date=${date}`);
         return response.data;
     },
 

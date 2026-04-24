@@ -59,7 +59,7 @@ export default function Attendance() {
             try {
                 const [gradesData, classesData] = await Promise.all([
                     api.getClasses(), // We use classes to derive grades if needed, or specific grades API
-                    api.getAttendanceSummary(classFilter, dateFilter)
+                    classFilter ? api.getAttendanceSummary(classFilter, dateFilter) : Promise.resolve({ data: [] })
                 ]);
                 
                 // Extract unique grades
