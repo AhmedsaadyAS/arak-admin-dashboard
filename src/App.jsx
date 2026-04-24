@@ -210,7 +210,7 @@ export default function App() {
                             } />
 
                             <Route path="/attendance" element={
-                                <ProtectedRoute requiredPermission={PERMISSIONS.STUDENTS}>
+                                <ProtectedRoute requiredPermission={PERMISSIONS.ATTENDANCE}>
                                     <Layout title="Attendance Overview">
                                         <Attendance />
                                     </Layout>
@@ -218,7 +218,7 @@ export default function App() {
                             } />
 
                             <Route path="/attendance/student/:studentId" element={
-                                <ProtectedRoute requiredPermission={PERMISSIONS.STUDENTS}>
+                                <ProtectedRoute requiredPermission={PERMISSIONS.ATTENDANCE}>
                                     <Layout title="Student Attendance">
                                         <AttendanceStudentDetails />
                                     </Layout>

@@ -58,7 +58,7 @@ const menuItems = [
         label: "Attendance",
         path: "/attendance",
         icon: <ClipboardList size={20} />,
-        permission: PERMISSIONS.STUDENTS
+        permission: PERMISSIONS.ATTENDANCE
     },
     {
         key: "events",

@@ -25,6 +25,7 @@ export const PERMISSIONS = {
     SETTINGS: 'settings',
     CONTROL_SHEETS: 'control_sheets',
     GRADES: 'grades',
+    ATTENDANCE: 'attendance',
 
     // Actions
     CREATE_STUDENT: 'create_student',
@@ -87,6 +88,7 @@ export const ROLE_PERMISSIONS = {
             PERMISSIONS.EXPORT_DATA,
             PERMISSIONS.CONTROL_SHEETS,
             PERMISSIONS.GRADES,
+            PERMISSIONS.ATTENDANCE,
         ],
         description: 'Administrative access to most features'
     },
@@ -111,6 +113,7 @@ export const ROLE_PERMISSIONS = {
             PERMISSIONS.VIEW_REPORTS,
             PERMISSIONS.CONTROL_SHEETS,
             PERMISSIONS.GRADES,
+            PERMISSIONS.ATTENDANCE,
         ],
         description: 'Academic operations - students, teachers, schedules, grades'
     },
