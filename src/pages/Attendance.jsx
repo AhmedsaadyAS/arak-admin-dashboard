@@ -65,7 +65,8 @@ export default function Attendance() {
                 // Extract unique grades
                 const uniqueGrades = [...new Set(gradesData.map(c => c.grade))];
                 setGrades(uniqueGrades);
-                setClasses(classesData);
+                const rawClasses = classesData?.data ?? classesData;
+                setClasses(Array.isArray(rawClasses) ? rawClasses : []);
             } catch (err) {
                 console.error("Failed to load filters", err);
             }
