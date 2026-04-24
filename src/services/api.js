@@ -364,7 +364,10 @@ export const api = {
         });
         
         // Backend returns ClassAttendanceResponseDto: { classId, date, students[] }
-        const records = (response.data.students || []).map(mapRecordStatus);
+        const records = (response.data.students || []).map(s => ({
+            ...mapRecordStatus(s),
+            id: s.attendanceRecordId // Map backend ID to frontend 'id' field
+        }));
 
         return {
             data: records,
