@@ -91,11 +91,24 @@ export default function AddEditStudent({ student, onBack, onSave }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        const payload = { ...formData };
-        if (payload.parentId === '') {
-            payload.parentId = null;
-        }
-        onSave(payload);
+        const studentData = {
+            id: student ? parseInt(student.id) : undefined,
+            name: formData.name || "",
+            userName: formData.name || "",
+            age: parseInt(formData.age) || 0,
+            email: formData.email || "",
+            dateOfBirth: formData.dateOfBirth || "",
+            placeOfBirth: formData.placeOfBirth || "",
+            address: formData.address || "",
+            city: formData.city || "",
+            phoneNumber: formData.phone || formData.phoneNumber || "",
+            grade: formData.grade || "",
+            status: formData.status || "Active",
+            image: formData.image || null,
+            classId: formData.classId ? parseInt(formData.classId) : null,
+            parentId: formData.parentId ? parseInt(formData.parentId) : null,
+        };
+        onSave(studentData);
     };
 
     return (

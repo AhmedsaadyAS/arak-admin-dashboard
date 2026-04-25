@@ -17,7 +17,10 @@ export default function DeleteWarningModal({
     entityType = "Teacher",
     entityName = "",
     dependencies = {},
-    onCancel
+    onCancel,
+    onForceDelete,
+    isForceDeleting = false,
+    forceError = null
 }) {
     if (!isOpen) return null;
 
@@ -63,6 +66,12 @@ export default function DeleteWarningModal({
                     </p>
                 </div>
 
+                {forceError && (
+                    <div className="warning-error">
+                        {forceError}
+                    </div>
+                )}
+
                 <div className="modal-actions-center">
                     <button
                         className="action-btn-primary"
@@ -70,6 +79,15 @@ export default function DeleteWarningModal({
                     >
                         Close
                     </button>
+                    {onForceDelete && (
+                        <button
+                            className="action-btn-danger"
+                            onClick={onForceDelete}
+                            disabled={isForceDeleting}
+                        >
+                            {isForceDeleting ? 'Deleting...' : 'Delete Anyway'}
+                        </button>
+                    )}
                 </div>
             </div>
         </div>

@@ -129,3 +129,33 @@
         font-size: 1.5rem;
     }
 }
+
+.action-btn-danger {
+    padding: 0.875rem 3rem;
+    border-radius: 8px;
+    background-color: #dc2626;
+    color: #ffffff;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    font-weight: 600;
+}
+
+.action-btn-danger:hover:not(:disabled) {
+    background-color: #b91c1c;
+}
+
+.action-btn-danger:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.warning-error {
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #b91c1c;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    margin-top: 0.75rem;
+}

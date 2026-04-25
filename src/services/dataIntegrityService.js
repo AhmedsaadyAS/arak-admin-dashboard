@@ -151,7 +151,7 @@ export const dataIntegrityService = {
             const numericId = parseInt(studentId, 10);
 
             const [attendance, evaluations] = await Promise.all([
-                api.client.get('/attendance', { params: { studentId: numericId } }),
+                api.client.get(`/attendance/student/${numericId}`),
                 api.client.get('/evaluations', { params: { studentId: numericId } }),
             ]);
 

@@ -137,7 +137,7 @@ export const taskService = {
                 normalizedUpdates.classId = ensureNumericId(updates.classId, 'classId');
             }
 
-            const response = await api.client.patch(`/tasks/${numericId}`, normalizedUpdates);
+            const response = await api.client.put(`/tasks/${numericId}`, normalizedUpdates);
             return response.data;
         } catch (error) {
             console.error("TaskService: Failed to update task", error);

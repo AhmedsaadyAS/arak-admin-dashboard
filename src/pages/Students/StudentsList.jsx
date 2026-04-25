@@ -44,6 +44,8 @@ export default function StudentsList() {
     const [showDeleteWarning, setShowDeleteWarning] = useState(false);
     const [studentToDelete, setStudentToDelete] = useState(null);
     const [deleteDependencies, setDeleteDependencies] = useState(null);
+    const [forceDeleteLoading, setForceDeleteLoading] = useState(false);
+    const [forceDeleteError, setForceDeleteError] = useState(null);
 
     /**
      * Fetch Students from API with Server-Side Pagination
@@ -168,14 +170,14 @@ export default function StudentsList() {
             alert('You do not have permission to delete students.');
             return;
         }
-        
+
         setStudentToDelete(student);
         setDeleteDependencies(null);
-        
+
         try {
             // Check dependencies first
             const [attendance, evaluations] = await Promise.all([
-                api.client.get('/attendance', { params: { studentId: student.id } }),
+                api.client.get(`/attendance/student/${student.id}`),
                 api.client.get('/evaluations', { params: { studentId: student.id } })
             ]);
 
@@ -188,6 +190,7 @@ export default function StudentsList() {
 
             if (totalDeps > 0) {
                 setDeleteDependencies(dependencies);
+                setForceDeleteError(null);
                 setShowDeleteWarning(true);
             } else {
                 setShowDeleteModal(true);
@@ -201,7 +204,7 @@ export default function StudentsList() {
 
     const confirmDeleteStudent = useCallback(async () => {
         if (!studentToDelete) return;
-        
+
         try {
             await api.deleteStudent(studentToDelete.id);
             setStudents(students.filter(s => s.id !== studentToDelete.id));
@@ -209,10 +212,34 @@ export default function StudentsList() {
             setStudentToDelete(null);
         } catch (err) {
             console.error('Failed to delete student:', err);
-            const errorMsg = err.response?.data?.message || err.message || 'Failed to delete student';
-            alert(errorMsg);
             setShowDeleteModal(false);
+
+            if (err.response?.status === 409) {
+                setShowDeleteWarning(true);
+            } else {
+                alert(err.message || 'Failed to delete student');
+                setStudentToDelete(null);
+            }
+        }
+    }, [studentToDelete, students]);
+
+    const handleForceDelete = useCallback(async () => {
+        if (!studentToDelete) return;
+
+        setForceDeleteError(null);
+        setForceDeleteLoading(true);
+
+        try {
+            await api.client.delete(`/students/${studentToDelete.id}/force`);
+            setStudents(students.filter(s => s.id !== studentToDelete.id));
+            setShowDeleteWarning(false);
             setStudentToDelete(null);
+            setDeleteDependencies(null);
+        } catch (forceErr) {
+            console.error('Force delete failed:', forceErr);
+            setForceDeleteError(forceErr.response?.data?.message || forceErr.message || 'Force delete failed');
+        } finally {
+            setForceDeleteLoading(false);
         }
     }, [studentToDelete, students]);
 
@@ -399,7 +426,7 @@ export default function StudentsList() {
                     )}
                 </div>
             )}
-            
+
             {/* Delete Confirmation Modal */}
             <ConfirmModal
                 isOpen={showDeleteModal}
@@ -412,7 +439,7 @@ export default function StudentsList() {
                 }}
                 variant="danger"
             />
-            
+
             {/* Delete Warning Modal (when dependencies exist) */}
             <DeleteWarningModal
                 isOpen={showDeleteWarning}
@@ -423,7 +450,11 @@ export default function StudentsList() {
                     setShowDeleteWarning(false);
                     setStudentToDelete(null);
                     setDeleteDependencies(null);
+                    setForceDeleteError(null);
                 }}
+                onForceDelete={handleForceDelete}
+                isForceDeleting={forceDeleteLoading}
+                forceError={forceDeleteError}
             />
         </section>
     );

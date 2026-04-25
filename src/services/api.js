@@ -127,7 +127,7 @@ export const api = {
         // Data Integrity: Check for dependencies before deletion
         try {
             const [attendance, evaluations] = await Promise.all([
-                apiClient.get('/attendance', { params: { studentId: numericId } }),
+                apiClient.get(`/attendance/student/${numericId}`),
                 apiClient.get('/evaluations', { params: { studentId: numericId } })
             ]);
 
@@ -362,7 +362,7 @@ export const api = {
         const response = await apiClient.get(`/attendance/class/${classId}`, {
             params: { date }
         });
-        
+
         // Backend returns ClassAttendanceResponseDto: { classId, date, students[] }
         const records = (response.data.students || []).map(s => ({
             ...mapRecordStatus(s),
@@ -405,11 +405,11 @@ export const api = {
         const response = await apiClient.get(`/attendance/student/${studentId}`, {
             params: { month, year }
         });
-        
+
         if (response.data && Array.isArray(response.data.records)) {
             response.data.records = response.data.records.map(mapRecordStatus);
         }
-        
+
         return response.data;
     },
 
