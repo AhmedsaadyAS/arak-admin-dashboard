@@ -13,7 +13,7 @@ export default function AddEditStudent({ student, onBack, onSave }) {
         name: student?.name || '',
         studentId: student?.studentId || '',
         email: student?.email || '',
-        phone: student?.phone || '',
+        phone: student?.phoneNumber || student?.phone || '',
         grade: student?.grade || '',
         classId: student?.classId || '',
         className: student?.className || '',
@@ -37,8 +37,21 @@ export default function AddEditStudent({ student, onBack, onSave }) {
                     api.getClasses(),
                     api.getParents()
                 ]);
-                setClasses(classesData || []);
+                const loadedClasses = classesData || [];
+                setClasses(loadedClasses);
                 setParents(parentsRes || []);
+
+                // Auto-resolve grade from classId if grade doesn't match any class name
+                if (student?.classId && loadedClasses.length > 0) {
+                    const matchedClass = loadedClasses.find(c => c.id == student.classId);
+                    if (matchedClass) {
+                        setFormData(prev => ({
+                            ...prev,
+                            grade: matchedClass.name,
+                            className: matchedClass.name
+                        }));
+                    }
+                }
             } catch (error) {
                 console.error('Failed to fetch form data:', error);
             }

@@ -11,7 +11,7 @@ export default function AddEditTeacher({ teacher, onBack, onSave }) {
         name: teacher?.name || '',
         teacherId: teacher?.teacherId || '',
         email: teacher?.email || '',
-        phone: teacher?.phone || '',
+        phone: teacher?.phoneNumber || teacher?.phone || '',
         subject: teacher?.subject || '',
         department: teacher?.department || '',
         experience: teacher?.experience || '',
