@@ -106,7 +106,41 @@ export default function TeacherDetails() {
             {/* Header Card */}
             <div className="teacher-header-card">
                 <div className="teacher-header-left">
-                    <div className="teacher-photo">{teacher.name.split(' ').map(n => n[0]).join('')}</div>
+                    <div style={{
+                        width: '80px',
+                        height: '80px',
+                        borderRadius: '50%',
+                        overflow: 'hidden',
+                        flexShrink: 0,
+                        background: 'linear-gradient(135deg, #f093fb, #f5a623)'
+                    }}>
+                        {teacher.image ? (
+                            <img
+                                src={teacher.image?.startsWith('http')
+                                    ? teacher.image
+                                    : `http://localhost:5000${teacher.image}`}
+                                alt={teacher.name}
+                                style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'cover'
+                                }}
+                            />
+                        ) : (
+                            <span style={{
+                                width: '100%',
+                                height: '100%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: 'white',
+                                fontWeight: '600',
+                                fontSize: '1.5rem'
+                            }}>
+                                {teacher.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2)}
+                            </span>
+                        )}
+                    </div>
                     <div className="teacher-header-info">
                         <h2>{teacher.name}</h2>
                         <p className="teacher-id">{teacher.teacherId}</p>

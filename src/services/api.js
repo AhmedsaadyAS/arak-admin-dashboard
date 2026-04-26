@@ -418,6 +418,15 @@ export const api = {
         return response.data;
     },
 
+    // --- Upload ---
+
+    uploadPhoto: async (formData) => {
+        const response = await apiClient.post('/upload/photo', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        return response.data;
+    },
+
     seedAttendance: async () => {
         const response = await apiClient.post('/attendance/seed');
         return response.data;

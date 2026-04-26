@@ -295,8 +295,30 @@ export default function TeachersList() {
                                     </td>
                                     <td>
                                         <div className="teacher-info">
-                                            <div className="teacher-avatar">
-                                                {(teacher.name || "T").charAt(0)}
+                                            <div style={{
+                                                width: '40px',
+                                                height: '40px',
+                                                borderRadius: '50%',
+                                                overflow: 'hidden',
+                                                background: 'linear-gradient(135deg, #f093fb, #f5a623)',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                flexShrink: 0
+                                            }}>
+                                                {teacher.image ? (
+                                                    <img
+                                                        src={teacher.image?.startsWith('http')
+                                                            ? teacher.image
+                                                            : `http://localhost:5000${teacher.image}`}
+                                                        alt={teacher.name}
+                                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                    />
+                                                ) : (
+                                                    <span style={{ color: 'white', fontWeight: '600', fontSize: '0.9rem' }}>
+                                                        {teacher.name?.charAt(0).toUpperCase()}
+                                                    </span>
+                                                )}
                                             </div>
                                             <div className="teacher-details">
                                                 <h4>{teacher.name}</h4>

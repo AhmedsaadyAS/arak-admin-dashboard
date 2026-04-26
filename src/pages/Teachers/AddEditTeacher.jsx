@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Save, X, Upload } from 'lucide-react';
 import { api } from '../../services/api';
 import '../../styles/layout.css';
@@ -17,7 +17,9 @@ export default function AddEditTeacher({ teacher, onBack, onSave }) {
         address: teacher?.address || '',
         about: teacher?.about || '',
         status: teacher?.status || 'Active',
-        assignedClasses: (teacher?.assignedClasses || []).map(Number)
+        assignedClasses: (teacher?.assignedClasses || []).map(Number),
+        image: teacher?.image || null,
+        imagePreview: null,
     });
 
     const [availableClasses, setAvailableClasses] = useState([]);
@@ -40,12 +42,34 @@ export default function AddEditTeacher({ teacher, onBack, onSave }) {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    const fileInputRef = useRef(null);
+
+    const handlePhotoUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const previewUrl = URL.createObjectURL(file);
+        setFormData(prev => ({ ...prev, imagePreview: previewUrl }));
+
+        try {
+            const formPayload = new FormData();
+            formPayload.append('file', file);
+            const response = await api.uploadPhoto(formPayload);
+            setFormData(prev => ({ ...prev, image: response.url }));
+        } catch (err) {
+            console.error('Photo upload failed:', err);
+            alert('Failed to upload photo. Please try again.');
+            setFormData(prev => ({ ...prev, imagePreview: null }));
+        }
+    };
+
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        const { phone, ...rest } = formData;
+        const { phone, imagePreview, image, ...rest } = formData;
         onSave({
             ...rest,
+            image: image || null,
             phoneNumber: phone || '',
         });
     };
@@ -65,24 +89,45 @@ export default function AddEditTeacher({ teacher, onBack, onSave }) {
                     </h4>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-                        {/* Photo Upload Placeholder */}
+                        {/* Photo Upload */}
                         <div style={{ gridRow: 'span 3', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                             <label style={{ fontWeight: '500' }}>Photo</label>
-                            <div style={{
-                                width: '150px',
-                                height: '150px',
-                                background: '#F3F4FF',
-                                borderRadius: '12px',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                border: '2px dashed #C1BBEB',
-                                cursor: 'pointer',
-                                color: 'var(--primary-color)'
-                            }}>
-                                <Upload size={24} />
-                                <span style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>Upload Photo</span>
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                accept="image/jpeg,image/png,image/webp"
+                                onChange={handlePhotoUpload}
+                                style={{ display: 'none' }}
+                            />
+                            <div
+                                onClick={() => fileInputRef.current?.click()}
+                                style={{
+                                    width: '150px',
+                                    height: '150px',
+                                    background: '#F3F4FF',
+                                    borderRadius: '12px',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    border: '2px dashed #C1BBEB',
+                                    cursor: 'pointer',
+                                    color: 'var(--primary-color)',
+                                    overflow: 'hidden'
+                                }}
+                            >
+                                {formData.imagePreview || formData.image ? (
+                                    <img
+                                        src={formData.imagePreview || formData.image}
+                                        alt="Teacher"
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '12px' }}
+                                    />
+                                ) : (
+                                    <>
+                                        <Upload size={24} />
+                                        <span style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>Upload Photo</span>
+                                    </>
+                                )}
                             </div>
                         </div>
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Save, X, Upload } from 'lucide-react';
 import { api } from '../../services/api';
 import '../../styles/layout.css';
@@ -17,16 +17,17 @@ export default function AddEditStudent({ student, onBack, onSave }) {
         grade: student?.grade || '',
         classId: student?.classId || '',
         className: student?.className || '',
-        gender: student?.gender || 'Male',
         dateOfBirth: student?.dateOfBirth || '',
-        placeOfBirth: 'Jakarta', // Default or from data
+        placeOfBirth: student?.placeOfBirth || 'Jakarta',
         address: student?.address || '',
         city: student?.city || '',
         parentId: student?.parentId || '',
         parentName: student?.parentName || '',
         parentEmail: student?.parentEmail || '',
         parentPhone: student?.parentPhone || '',
-        status: student?.status || 'Active'
+        status: student?.status || 'Active',
+        image: student?.image || null,
+        imagePreview: null,
     });
 
     // Fetch classes and parents on mount
@@ -39,7 +40,8 @@ export default function AddEditStudent({ student, onBack, onSave }) {
                 ]);
                 const loadedClasses = classesData || [];
                 setClasses(loadedClasses);
-                setParents(parentsRes || []);
+                const loadedParents = parentsRes || [];
+                setParents(loadedParents);
 
                 // Auto-resolve grade from classId if grade doesn't match any class name
                 if (student?.classId && loadedClasses.length > 0) {
@@ -49,6 +51,19 @@ export default function AddEditStudent({ student, onBack, onSave }) {
                             ...prev,
                             grade: matchedClass.name,
                             className: matchedClass.name
+                        }));
+                    }
+                }
+
+                // Auto-populate parent details from parentId on edit
+                if (student?.parentId && loadedParents.length > 0) {
+                    const matchedParent = loadedParents.find(p => p.id == student.parentId);
+                    if (matchedParent) {
+                        setFormData(prev => ({
+                            ...prev,
+                            parentName: matchedParent.parentName || '',
+                            parentEmail: matchedParent.email || '',
+                            parentPhone: matchedParent.phone || ''
                         }));
                     }
                 }
@@ -102,6 +117,29 @@ export default function AddEditStudent({ student, onBack, onSave }) {
         }
     };
 
+    const fileInputRef = useRef(null);
+
+    const handlePhotoUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Preview immediately
+        const previewUrl = URL.createObjectURL(file);
+        setFormData(prev => ({ ...prev, imagePreview: previewUrl }));
+
+        // Upload to backend
+        try {
+            const formPayload = new FormData();
+            formPayload.append('file', file);
+            const response = await api.uploadPhoto(formPayload);
+            setFormData(prev => ({ ...prev, image: response.url }));
+        } catch (err) {
+            console.error('Photo upload failed:', err);
+            alert('Failed to upload photo. Please try again.');
+            setFormData(prev => ({ ...prev, imagePreview: null }));
+        }
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
         const studentData = {
@@ -140,24 +178,45 @@ export default function AddEditStudent({ student, onBack, onSave }) {
                     </h4>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-                        {/* Photo Upload Placeholder */}
+                        {/* Photo Upload */}
                         <div style={{ gridRow: 'span 3', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                             <label style={{ fontWeight: '500' }}>Photo</label>
-                            <div style={{
-                                width: '150px',
-                                height: '150px',
-                                background: '#F3F4FF',
-                                borderRadius: '12px',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                border: '2px dashed #C1BBEB',
-                                cursor: 'pointer',
-                                color: 'var(--primary-color)'
-                            }}>
-                                <Upload size={24} />
-                                <span style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>Upload Photo</span>
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                accept="image/jpeg,image/png,image/webp"
+                                onChange={handlePhotoUpload}
+                                style={{ display: 'none' }}
+                            />
+                            <div
+                                onClick={() => fileInputRef.current?.click()}
+                                style={{
+                                    width: '150px',
+                                    height: '150px',
+                                    background: '#F3F4FF',
+                                    borderRadius: '12px',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    border: '2px dashed #C1BBEB',
+                                    cursor: 'pointer',
+                                    color: 'var(--primary-color)',
+                                    overflow: 'hidden'
+                                }}
+                            >
+                                {formData.imagePreview || formData.image ? (
+                                    <img
+                                        src={formData.imagePreview || formData.image}
+                                        alt="Student"
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '12px' }}
+                                    />
+                                ) : (
+                                    <>
+                                        <Upload size={24} />
+                                        <span style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>Upload Photo</span>
+                                    </>
+                                )}
                             </div>
                         </div>
 
@@ -224,20 +283,6 @@ export default function AddEditStudent({ student, onBack, onSave }) {
                             </select>
                         </div>
 
-                        <div>
-                            <label htmlFor="gender" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Gender *</label>
-                            <select
-                                id="gender"
-                                name="gender"
-                                value={formData.gender}
-                                onChange={handleChange}
-                                required
-                                style={{ width: '100%', padding: '0.75rem', border: '1px solid #e5e7eb', borderRadius: '8px' }}
-                            >
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
-                            </select>
-                        </div>
 
                         <div>
                             <label htmlFor="dateOfBirth" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Date of Birth *</label>
