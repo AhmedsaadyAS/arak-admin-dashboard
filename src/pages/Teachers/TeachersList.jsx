@@ -21,7 +21,6 @@ export default function TeachersList() {
     // Filters State
     const [searchTerm, setSearchTerm] = useState('');
     const [subjectFilter, setSubjectFilter] = useState('All');
-    const [departmentFilter, setDepartmentFilter] = useState('All');
 
     // Data State
     const [teachers, setTeachers] = useState([]);
@@ -63,11 +62,6 @@ export default function TeachersList() {
         fetchData();
     }, [refreshKey]);
 
-    // Unique Departments (still extract from teachers)
-    const uniqueDepartments = useMemo(() => {
-        const departments = teachers.map(t => t.department || 'General');
-        return [...new Set(departments)].sort();
-    }, [teachers]);
 
     // Filter Logic
     const filteredTeachers = useMemo(() => {
@@ -85,11 +79,10 @@ export default function TeachersList() {
                 teacherId.includes(searchLower);
 
             const matchesSubject = subjectFilter === 'All' || teacher.subject === subjectFilter;
-            const matchesDepartment = departmentFilter === 'All' || (teacher.department || 'General') === departmentFilter;
 
-            return matchesSearch && matchesSubject && matchesDepartment;
+            return matchesSearch && matchesSubject;
         });
-    }, [teachers, searchTerm, subjectFilter, departmentFilter]);
+    }, [teachers, searchTerm, subjectFilter]);
 
     // Handlers
     const handleAddTeacher = () => {
@@ -245,16 +238,6 @@ export default function TeachersList() {
                     ))}
                 </select>
 
-                <select
-                    className="filter-select"
-                    value={departmentFilter}
-                    onChange={(e) => setDepartmentFilter(e.target.value)}
-                >
-                    <option value="All">All Departments</option>
-                    {uniqueDepartments.map(dept => (
-                        <option key={dept} value={dept}>{dept}</option>
-                    ))}
-                </select>
 
                 <button className="action-btn btn-secondary-outline" onClick={handleBulkEmail}>
                     <Send size={18} />
@@ -275,13 +258,12 @@ export default function TeachersList() {
             {/* Results Counter */}
             <div className="results-counter">
                 <span>Showing <strong>{filteredTeachers.length}</strong> of {teachers.length} teachers</span>
-                {(searchTerm || subjectFilter !== 'All' || departmentFilter !== 'All') && (
+                {(searchTerm || subjectFilter !== 'All') && (
                     <button
                         className="clear-filters-btn"
                         onClick={() => {
                             setSearchTerm('');
                             setSubjectFilter('All');
-                            setDepartmentFilter('All');
                         }}
                     >
                         Clear All Filters
@@ -297,9 +279,6 @@ export default function TeachersList() {
                             <th>ID</th>
                             <th>Name</th>
                             <th>Subject</th>
-                            <th>Department</th>
-                            <th>Experience</th>
-                            <th>City</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -328,13 +307,6 @@ export default function TeachersList() {
                                     <td>
                                         <span className="subject-badge">{teacher.subject}</span>
                                     </td>
-                                    <td style={{ color: '#303972' }}>{teacher.department || 'General'}</td>
-                                    <td>
-                                        <span className="grade-badge" style={{ background: '#E8F5E9', color: '#00B69B' }}>
-                                            {teacher.experience ? `${teacher.experience} years` : 'N/A'}
-                                        </span>
-                                    </td>
-                                    <td style={{ color: '#303972' }}>{teacher.city}</td>
                                     <td>
                                         <div className="action-buttons">
                                             <button
@@ -389,7 +361,6 @@ export default function TeachersList() {
                                             onClick={() => {
                                                 setSearchTerm('');
                                                 setSubjectFilter('All');
-                                                setDepartmentFilter('All');
                                             }}
                                         >
                                             Clear Filters

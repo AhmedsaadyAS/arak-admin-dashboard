@@ -13,15 +13,11 @@ export default function AddEditTeacher({ teacher, onBack, onSave }) {
         email: teacher?.email || '',
         phone: teacher?.phoneNumber || teacher?.phone || '',
         subject: teacher?.subject || '',
-        department: teacher?.department || '',
-        experience: teacher?.experience || '',
-        education: teacher?.education || '',
         dateJoined: teacher?.dateJoined || new Date().toISOString().split('T')[0],
         address: teacher?.address || '',
-        city: teacher?.city || '',
         about: teacher?.about || '',
         status: teacher?.status || 'Active',
-        assignedClasses: teacher?.assignedClasses || []
+        assignedClasses: (teacher?.assignedClasses || []).map(Number)
     });
 
     const [availableClasses, setAvailableClasses] = useState([]);
@@ -47,9 +43,10 @@ export default function AddEditTeacher({ teacher, onBack, onSave }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        const { phone, ...rest } = formData;
         onSave({
-            ...formData,
-            experience: formData.experience !== '' ? parseInt(formData.experience, 10) : null,
+            ...rest,
+            phoneNumber: phone || '',
         });
     };
     return (
@@ -138,17 +135,6 @@ export default function AddEditTeacher({ teacher, onBack, onSave }) {
                             />
                         </div>
 
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>City *</label>
-                            <input
-                                type="text"
-                                name="city"
-                                value={formData.city}
-                                onChange={handleChange}
-                                required
-                                style={{ width: '100%', padding: '0.75rem', border: '1px solid #e5e7eb', borderRadius: '8px' }}
-                            />
-                        </div>
 
                         <div style={{ gridColumn: 'span 2' }}>
                             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Address</label>
@@ -187,22 +173,6 @@ export default function AddEditTeacher({ teacher, onBack, onSave }) {
                             </select>
                         </div>
 
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Department</label>
-                            <select
-                                name="department"
-                                value={formData.department}
-                                onChange={handleChange}
-                                style={{ width: '100%', padding: '0.75rem', border: '1px solid #e5e7eb', borderRadius: '8px' }}
-                            >
-                                <option value="">Select Department</option>
-                                <option value="Science">Science</option>
-                                <option value="Humanities">Humanities</option>
-                                <option value="Languages">Languages</option>
-                                <option value="Mathematics">Mathematics</option>
-                                <option value="Technology">Technology</option>
-                            </select>
-                        </div>
 
                         <div style={{ gridColumn: 'span 2' }}>
                             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Assigned Classes</label>
@@ -232,17 +202,6 @@ export default function AddEditTeacher({ teacher, onBack, onSave }) {
                             </small>
                         </div>
 
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Experience (Years)</label>
-                            <input
-                                type="number"
-                                name="experience"
-                                value={formData.experience}
-                                onChange={handleChange}
-                                min="0"
-                                style={{ width: '100%', padding: '0.75rem', border: '1px solid #e5e7eb', borderRadius: '8px' }}
-                            />
-                        </div>
 
                         <div>
                             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Date Joined</label>
@@ -255,17 +214,6 @@ export default function AddEditTeacher({ teacher, onBack, onSave }) {
                             />
                         </div>
 
-                        <div style={{ gridColumn: 'span 2' }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Education / Qualifications</label>
-                            <input
-                                type="text"
-                                name="education"
-                                value={formData.education}
-                                onChange={handleChange}
-                                placeholder="e.g. PhD in Physics, University of..."
-                                style={{ width: '100%', padding: '0.75rem', border: '1px solid #e5e7eb', borderRadius: '8px' }}
-                            />
-                        </div>
 
                         <div style={{ gridColumn: 'span 2' }}>
                             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>About</label>

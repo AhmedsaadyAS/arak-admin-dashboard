@@ -30,7 +30,6 @@ export default function TeacherForm({
         assignedClasses: [],
         status: 'Active',
         about: '',
-        education: '',
         expertise: []
     });
 
@@ -68,7 +67,6 @@ export default function TeacherForm({
                 assignedClasses: teacher.assignedClasses || [],
                 status: teacher.status || 'Active',
                 about: teacher.about || '',
-                education: teacher.education || '',
                 expertise: Array.isArray(teacher.expertise) ? teacher.expertise : []
             });
         } else {
@@ -81,7 +79,6 @@ export default function TeacherForm({
                 assignedClasses: [],
                 status: 'Active',
                 about: '',
-                education: '',
                 expertise: []
             });
         }
@@ -196,10 +193,9 @@ export default function TeacherForm({
                     name: normalizedData.name,
                     subject: normalizedData.subject,
                     email: normalizedData.email,
-                    phone: normalizedData.phone,
+                    phoneNumber: normalizedData.phone,
                     status: normalizedData.status,
                     about: normalizedData.about,
-                    education: normalizedData.education,
                     expertise: normalizedData.expertise
                 });
 
