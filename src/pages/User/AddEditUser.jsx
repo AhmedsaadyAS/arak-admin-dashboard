@@ -103,10 +103,12 @@ export default function AddEditUser({ user, userType, currentUserRole, onBack, o
     // Backend ParentDto fields: id, name, email, phoneNumber, studentIds
     const [parentFormData, setParentFormData] = useState({
         parentName: isParentMode && user ? (user.name ?? user.parentName ?? '') : '',
-        username: isParentMode && user ? (user.username ?? '') : '',
+        // Backend uses email as the ASP.NET Identity username — pre-fill from email
+        username: isParentMode && user ? (user.username ?? user.email ?? '') : '',
         email: isParentMode && user ? user.email : '',
         phone: isParentMode && user ? (user.phoneNumber ?? user.phone ?? '') : '',
         password: '',
+        // Backend ParentDto returns studentIds (not linkedStudents)
         linkedStudents: isParentMode && user ? (user.studentIds ?? user.linkedStudents ?? []) : [],
         status: isParentMode && user ? (user.status ?? 'Active') : 'Active'
     });

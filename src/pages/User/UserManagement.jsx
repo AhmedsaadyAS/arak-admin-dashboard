@@ -207,7 +207,13 @@ export default function UserManagement() {
                 }
 
                 // Sync: update students' denormalized parent fields
-                await dataIntegrityService.syncParentToStudents(savedParent, oldLinkedStudents);
+                // IMPORTANT: backend PUT response has `studentIds`, not `linkedStudents`.
+                // We must inject the form's linkedStudents so the diff logic works correctly.
+                const savedParentWithLinks = {
+                    ...savedParent,
+                    linkedStudents: userData.linkedStudents ?? savedParent.studentIds ?? [],
+                };
+                await dataIntegrityService.syncParentToStudents(savedParentWithLinks, oldLinkedStudents);
             }
             setIsEditing(false);
             setCurrentEditUser(null);
