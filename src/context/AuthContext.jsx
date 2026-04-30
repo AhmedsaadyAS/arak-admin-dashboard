@@ -6,6 +6,19 @@ const AuthContext = createContext(null);
 const TOKEN_KEY = 'arak_auth_token';
 const USER_KEY = 'arak_user';
 
+const parseJwt = (token) => {
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload);
+    } catch (e) {
+        return null;
+    }
+};
+
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -25,7 +38,15 @@ export const AuthProvider = ({ children }) => {
 
         if (token && savedUser) {
             try {
-                setUser(JSON.parse(savedUser));
+                const userData = JSON.parse(savedUser);
+                const decoded = parseJwt(token);
+                if (decoded) {
+                    userData.id = decoded.sub 
+                        ?? decoded.nameid 
+                        ?? decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"]
+                        ?? userData.id;
+                }
+                setUser(userData);
             } catch (error) {
                 console.error('Failed to parse saved user:', error);
                 logout();
@@ -35,6 +56,14 @@ export const AuthProvider = ({ children }) => {
     }, [logout]);
 
     const login = (userData, token, rememberMe = false) => {
+        const decoded = parseJwt(token);
+        if (decoded) {
+            userData.id = decoded.sub 
+                ?? decoded.nameid 
+                ?? decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"]
+                ?? userData.id;
+        }
+
         setUser(userData);
 
         if (rememberMe) {
