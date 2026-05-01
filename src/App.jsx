@@ -6,6 +6,7 @@ import { ToastProvider } from "./context/ToastContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import Sidebar from "./components/layout/Sidebar";
 import Topbar from "./components/layout/Topbar";
+import ChatWidget from "./components/ChatWidget/ChatWidget";
 import Login from "./pages/Auth/Login";
 import Unauthorized from "./pages/Auth/Unauthorized";
 import Dashboard from "./pages/Dashboard/Dashboard";
@@ -29,6 +30,7 @@ import SheetManager from "./components/Control/SheetManager";
 import GradesPage from "./pages/Grades/GradesPage";
 import Attendance from "./pages/Attendance";
 import AttendanceStudentDetails from "./pages/AttendanceStudentDetails";
+import Conversations from "./pages/Conversations";
 import { PERMISSIONS } from "./config/permissions"; // Import permissions
 import "./styles/global.css";
 import "./styles/layout.css";
@@ -43,6 +45,7 @@ const Layout = ({ children, title }) => {
                     <div className="app-content">{children}</div>
                 </ErrorBoundary>
             </main>
+            <ChatWidget />
         </div>
     );
 };
@@ -189,6 +192,14 @@ export default function App() {
                                 <ProtectedRoute requiredPermission={PERMISSIONS.CHAT}>
                                     <Layout title="Chat">
                                         <Chat />
+                                    </Layout>
+                                </ProtectedRoute>
+                            } />
+
+                            <Route path="/conversations" element={
+                                <ProtectedRoute requiredPermission={PERMISSIONS.CHAT}>
+                                    <Layout title="Messages">
+                                        <Conversations />
                                     </Layout>
                                 </ProtectedRoute>
                             } />

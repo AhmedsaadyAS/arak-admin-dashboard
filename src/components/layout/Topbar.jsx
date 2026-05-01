@@ -1,6 +1,7 @@
 import React from "react";
 import { Search, Bell, Settings, RefreshCw, LogOut } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import MessageBell from "../common/MessageBell";
 import ApiStatus from "../common/ApiStatus";
 import { useRefresh } from "../../context/RefreshContext";
 import { useAuth } from "../../context/AuthContext";
@@ -33,6 +34,7 @@ export default function Topbar({ pageTitle = "Dashboard" }) {
           <button className="icon-btn" onClick={triggerRefresh} title="Refresh Data">
             <RefreshCw size={20} />
           </button>
+          <MessageBell />
           <button className="icon-btn">
             <Bell size={20} />
             <span className="notification-dot"></span>
