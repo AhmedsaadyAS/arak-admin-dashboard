@@ -431,4 +431,36 @@ export const api = {
         const response = await apiClient.post('/attendance/seed');
         return response.data;
     },
+
+    // --- Conversations (Chat) ---
+
+    getConversations: async () => {
+        const response = await apiClient.get('/Conversations');
+        return response.data;
+    },
+
+    getMessages: async (userId) => {
+        const response = await apiClient.get(`/Conversations/${userId}/messages`);
+        return response.data;
+    },
+
+    sendMessage: async (userId, data) => {
+        const response = await apiClient.post(`/Conversations/${userId}/messages`, data);
+        return response.data;
+    },
+
+    markConversationRead: async (userId) => {
+        const response = await apiClient.patch(`/Conversations/${userId}/read`);
+        return response.data;
+    },
+
+    // --- Chatbot ---
+
+    askChatbot: async (message) => {
+        const response = await apiClient.post('/Chatbot/ask', {
+            message,
+            conversationId: 'dashboard-chat'
+        });
+        return response.data;
+    }
 };
