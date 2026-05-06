@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Search, Bell, Settings, RefreshCw, LogOut } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import MessageBell from "../common/MessageBell";
 import ApiStatus from "../common/ApiStatus";
 import { useRefresh } from "../../context/RefreshContext";
 import { useAuth } from "../../context/AuthContext";

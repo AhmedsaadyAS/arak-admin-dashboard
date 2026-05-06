@@ -1,7 +1,9 @@
 import axios from 'axios';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+const CHATBOT_BASE_URL = 'http://127.0.0.1:8001';
 const TOKEN_KEY = 'arak_auth_token';
+const getToken = () => localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY);
 
 // Create Centralized Axios Instance
 const apiClient = axios.create({
@@ -434,51 +436,59 @@ export const api = {
 
     // --- Conversations / Messages ---
 
-    /**
-     * Get all conversations for the current user.
-     * Returns array of { participantId, lastMessage, lastMessageTime, unreadCount, participant: { name, avatar } }
-     */
     getConversations: async () => {
-        const response = await apiClient.get('/conversations');
+        const response = await apiClient.get('/Conversations');
         return response.data || [];
     },
 
-    /**
-     * Get paginated message history with a specific user.
-     * @param {string} userId - The other user's GUID string ID
-     * @param {number} page
-     * @param {number} pageSize
-     */
     getMessages: async (userId, page = 1, pageSize = 50) => {
-        const response = await apiClient.get(`/conversations/${userId}/messages`, {
+        const response = await apiClient.get(`/Conversations/${userId}/messages`, {
             params: { page, pageSize }
         });
         return response.data || [];
     },
 
-    /**
-     * Send a message to a user.
-     * @param {string} userId - Receiver's GUID string ID
-     * @param {string} content - Message text
-     */
     sendMessage: async (userId, content) => {
-        const response = await apiClient.post(`/conversations/${userId}/messages`, { content });
+        const response = await apiClient.post(`/Conversations/${userId}/messages`, { content });
         return response.data;
     },
 
-    /**
-     * Mark a single message as read.
-     */
     markMessageAsRead: async (userId, messageId) => {
-        const response = await apiClient.patch(`/conversations/${userId}/messages/${messageId}/read`);
+        const response = await apiClient.patch(`/Conversations/${userId}/messages/${messageId}/read`);
         return response.data;
     },
 
-    /**
-     * Mark all messages in a conversation as read.
-     */
     markConversationAsRead: async (userId) => {
-        const response = await apiClient.patch(`/conversations/${userId}/read`);
+        const response = await apiClient.patch(`/Conversations/${userId}/read`);
         return response.data;
     },
+
+    // --- Chatbot ---
+
+    askChatbot: async (message) => {
+        const response = await apiClient.post('/Chatbot/ask', {
+            message,
+            conversationId: 'dashboard-chat'
+        });
+        return response.data;
+    },
+
+    sendChatMessage: async (message, modelConfig = null) => {
+        const body = { message };
+        if (modelConfig) body.model_config_data = modelConfig;
+        const response = await axios.post(
+            `${CHATBOT_BASE_URL}/chat`,
+            body,
+            { headers: { Authorization: `Bearer ${getToken()}` } }
+        );
+        return response.data;
+    },
+
+    getActiveLayers: async () => {
+        return axios.get(
+            `${CHATBOT_BASE_URL}/chat/layers`,
+            { headers: { Authorization: `Bearer ${getToken()}` } }
+        );
+    }
+
 };

@@ -3,6 +3,19 @@ import axios from 'axios';
 // Use the same base URL as api.js — VITE_API_BASE_URL already includes /api
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
+const parseJwt = (token) => {
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload);
+    } catch (e) {
+        return null;
+    }
+};
+
 /**
  * Real Login through our .NET API
  * POST /api/auth/login
@@ -15,10 +28,19 @@ export const login = async (email, password) => {
         });
 
         if (response.data && response.data.token) {
+            const user = response.data.user;
+            const decoded = parseJwt(response.data.token);
+            if (decoded) {
+                user.id = decoded.sub 
+                    ?? decoded.nameid 
+                    ?? decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"]
+                    ?? user.id;
+            }
+
             return {
                 success: true,
                 data: {
-                    user: response.data.user,
+                    user: user,
                     token: response.data.token
                 }
             };
