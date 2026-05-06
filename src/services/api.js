@@ -431,4 +431,54 @@ export const api = {
         const response = await apiClient.post('/attendance/seed');
         return response.data;
     },
+
+    // --- Conversations / Messages ---
+
+    /**
+     * Get all conversations for the current user.
+     * Returns array of { participantId, lastMessage, lastMessageTime, unreadCount, participant: { name, avatar } }
+     */
+    getConversations: async () => {
+        const response = await apiClient.get('/conversations');
+        return response.data || [];
+    },
+
+    /**
+     * Get paginated message history with a specific user.
+     * @param {string} userId - The other user's GUID string ID
+     * @param {number} page
+     * @param {number} pageSize
+     */
+    getMessages: async (userId, page = 1, pageSize = 50) => {
+        const response = await apiClient.get(`/conversations/${userId}/messages`, {
+            params: { page, pageSize }
+        });
+        return response.data || [];
+    },
+
+    /**
+     * Send a message to a user.
+     * @param {string} userId - Receiver's GUID string ID
+     * @param {string} content - Message text
+     */
+    sendMessage: async (userId, content) => {
+        const response = await apiClient.post(`/conversations/${userId}/messages`, { content });
+        return response.data;
+    },
+
+    /**
+     * Mark a single message as read.
+     */
+    markMessageAsRead: async (userId, messageId) => {
+        const response = await apiClient.patch(`/conversations/${userId}/messages/${messageId}/read`);
+        return response.data;
+    },
+
+    /**
+     * Mark all messages in a conversation as read.
+     */
+    markConversationAsRead: async (userId) => {
+        const response = await apiClient.patch(`/conversations/${userId}/read`);
+        return response.data;
+    },
 };
