@@ -439,8 +439,10 @@ export const api = {
         return response.data;
     },
 
-    getMessages: async (userId) => {
-        const response = await apiClient.get(`/Conversations/${userId}/messages`);
+    getMessages: async (userId, page = 1, pageSize = 50) => {
+        const response = await apiClient.get(`/Conversations/${userId}/messages`, {
+            params: { page, pageSize }
+        });
         return response.data;
     },
 

@@ -48,6 +48,7 @@ export default function GradebookMonitor() {
     const [selectedSubject, setSelectedSubject] = useState('');
     const [grades, setGrades] = useState([]);
     const [students, setStudents] = useState([]);
+    const [schedules, setSchedules] = useState([]);
     const [loading, setLoading] = useState(false);
     const [isLocked, setIsLocked] = useState(false);
 
@@ -55,12 +56,14 @@ export default function GradebookMonitor() {
     useEffect(() => {
         const fetchInit = async () => {
             try {
-                const [classesData, subjectsData] = await Promise.all([
+                const [classesData, subjectsData, schedulesData] = await Promise.all([
                     api.getClasses(),
                     api.getSubjects(),
+                    api.getSchedules(),
                 ]);
                 setClasses(classesData || []);
                 setSubjects(subjectsData || []);
+                setSchedules(schedulesData || []);
             } catch (error) {
                 console.error('Failed to fetch initial data', error);
             }
@@ -139,6 +142,25 @@ export default function GradebookMonitor() {
         setGrades([]);
         setStudents([]);
     };
+
+    // Derived filtered subjects based on schedules for the selected class
+    const filteredSubjects = useMemo(() => {
+        if (!selectedClass) return subjects;
+        const classSubjectIds = [...new Set(
+            schedules
+                .filter(s => String(s.classId) === String(selectedClass))
+                .map(s => s.subjectId)
+                .filter(id => id != null)
+        )];
+        return subjects.filter(s => classSubjectIds.includes(parseInt(s.id, 10)));
+    }, [selectedClass, subjects, schedules]);
+
+    // Reset selected subject if it's no longer valid for the selected class
+    useEffect(() => {
+        if (selectedSubject && !filteredSubjects.some(s => String(s.id) === String(selectedSubject))) {
+            setSelectedSubject('');
+        }
+    }, [filteredSubjects, selectedSubject]);
 
     // ─── Derived Data ─────────────────────────────────
     const resolvedClassName = useMemo(() =>
@@ -325,7 +347,7 @@ export default function GradebookMonitor() {
                         label: 'Subject',
                         value: selectedSubject,
                         onChange: setSelectedSubject,
-                        options: subjects.map(s => ({ value: s.id, label: s.name }))
+                        options: filteredSubjects.map(s => ({ value: s.id, label: s.name }))
                     }
                 ]}
                 onClear={handleClearFilters}
