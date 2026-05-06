@@ -1,7 +1,9 @@
 import axios from 'axios';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+const CHATBOT_BASE_URL = 'http://127.0.0.1:8001';
 const TOKEN_KEY = 'arak_auth_token';
+const getToken = () => localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY);
 
 // Create Centralized Axios Instance
 const apiClient = axios.create({
@@ -464,5 +466,23 @@ export const api = {
             conversationId: 'dashboard-chat'
         });
         return response.data;
+    },
+
+    sendChatMessage: async (message, modelConfig = null) => {
+        const body = { message };
+        if (modelConfig) body.model_config_data = modelConfig;
+        const response = await axios.post(
+            `${CHATBOT_BASE_URL}/chat`,
+            body,
+            { headers: { Authorization: `Bearer ${getToken()}` } }
+        );
+        return response.data;
+    },
+
+    getActiveLayers: async () => {
+        return axios.get(
+            `${CHATBOT_BASE_URL}/chat/layers`,
+            { headers: { Authorization: `Bearer ${getToken()}` } }
+        );
     }
 };
