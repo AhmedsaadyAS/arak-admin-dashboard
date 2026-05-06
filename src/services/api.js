@@ -434,26 +434,31 @@ export const api = {
         return response.data;
     },
 
-    // --- Conversations (Chat) ---
+    // --- Conversations / Messages ---
 
     getConversations: async () => {
         const response = await apiClient.get('/Conversations');
-        return response.data;
+        return response.data || [];
     },
 
     getMessages: async (userId, page = 1, pageSize = 50) => {
         const response = await apiClient.get(`/Conversations/${userId}/messages`, {
             params: { page, pageSize }
         });
+        return response.data || [];
+    },
+
+    sendMessage: async (userId, content) => {
+        const response = await apiClient.post(`/Conversations/${userId}/messages`, { content });
         return response.data;
     },
 
-    sendMessage: async (userId, data) => {
-        const response = await apiClient.post(`/Conversations/${userId}/messages`, data);
+    markMessageAsRead: async (userId, messageId) => {
+        const response = await apiClient.patch(`/Conversations/${userId}/messages/${messageId}/read`);
         return response.data;
     },
 
-    markConversationRead: async (userId) => {
+    markConversationAsRead: async (userId) => {
         const response = await apiClient.patch(`/Conversations/${userId}/read`);
         return response.data;
     },
@@ -485,4 +490,5 @@ export const api = {
             { headers: { Authorization: `Bearer ${getToken()}` } }
         );
     }
+
 };

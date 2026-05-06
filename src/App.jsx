@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { RefreshProvider } from "./context/RefreshContext";
+import { NotificationProvider } from "./context/NotificationContext";
 import { ToastProvider } from "./context/ToastContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import Sidebar from "./components/layout/Sidebar";
@@ -54,6 +55,7 @@ export default function App() {
     return (
         <ToastProvider>
             <AuthProvider>
+                <NotificationProvider>
                 <RefreshProvider>
                     <Router>
                         <Routes>
@@ -245,6 +247,7 @@ export default function App() {
                         </Routes>
                     </Router>
                 </RefreshProvider>
+                </NotificationProvider>
             </AuthProvider>
         </ToastProvider>
     );
