@@ -140,25 +140,6 @@ export const navGroups: NavGroup[] = [
                 icon: React.createElement(MessageSquare, { size: 20 }),
                 permission: PERMISSIONS.CHAT,
             },
-            {
-                key: "activity",
-                label: "Latest Activity",
-                path: "/activity",
-                icon: React.createElement(Activity, { size: 20 }),
-                permission: PERMISSIONS.ACTIVITY,
-            },
-        ],
-    },
-    {
-        label: "Finance",
-        items: [
-            {
-                key: "fees",
-                label: "Fees",
-                path: "/fees",
-                icon: React.createElement(CreditCard, { size: 20 }),
-                permission: PERMISSIONS.FEES,
-            },
         ],
     },
 ];

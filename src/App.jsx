@@ -17,10 +17,8 @@ import TeacherDetails from "./pages/Teachers/TeacherDetails";
 import GradebookMonitor from "./pages/Evaluations/GradebookMonitor";
 import TaskMonitor from "./components/TaskMonitor";
 import Events from "./pages/Events/Events";
-import Fees from "./pages/Fees/Fees";
 import Reports from "./pages/Reports/Reports";
 import Chat from "./pages/Chat/Chat";
-import Activity from "./pages/Activity/Activity";
 import UserManagement from "./pages/User/UserManagement";
 import UserProfile from "./pages/User/UserProfile";
 import Settings from "./pages/Settings/Settings";
@@ -124,13 +122,7 @@ export default function App() {
                                 </ProtectedRoute>
                             } />
 
-                            <Route path="/fees" element={
-                                <ProtectedRoute requiredPermission={PERMISSIONS.FEES}>
-                                    <Layout title="Fees & Invoices">
-                                        <Fees />
-                                    </Layout>
-                                </ProtectedRoute>
-                            } />
+
 
                             <Route path="/reports" element={
                                 <ProtectedRoute requiredPermission={PERMISSIONS.REPORTS}>
@@ -156,13 +148,7 @@ export default function App() {
                                 </ProtectedRoute>
                             } />
 
-                            <Route path="/activity" element={
-                                <ProtectedRoute requiredPermission={PERMISSIONS.ACTIVITY}>
-                                    <Layout title="AI Analyser & Activity">
-                                        <Activity />
-                                    </Layout>
-                                </ProtectedRoute>
-                            } />
+
 
                             <Route path="/user" element={
                                 <ProtectedRoute requiredPermission={PERMISSIONS.USER_MANAGEMENT}>

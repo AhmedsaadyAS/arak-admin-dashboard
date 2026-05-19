@@ -54,7 +54,7 @@ function SearchResults({ results, onSelectResult }) {
 
                 return (
                     <div
-                        key={u.id}
+                        key={`${u.role}-${u.userId || u.id}`}
                         onClick={() => onSelectResult(u)}
                         className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer transition-colors border-b border-gray-50 last:border-b-0"
                     >
@@ -140,7 +140,7 @@ function ConversationList({ conversations, activeUserId, onSelect, userRoles }) 
 
                 return (
                     <div
-                        key={userId}
+                        key={`conv-${userId}`}
                         onClick={() => onSelect(conv)}
                         className={`flex items-center gap-3 p-4 cursor-pointer hover:bg-gray-50 transition-all duration-200 border-l-4
                             ${isActive 
@@ -379,7 +379,10 @@ export default function Conversations() {
 
             // Compile a local userId -> Role dictionary for conversation badges
             const roleDict = {};
-            combined.forEach(u => { roleDict[u.id] = u.role; });
+            combined.forEach(u => {
+                roleDict[u.userId] = u.role;  // key by Identity userId
+                roleDict[u.id] = u.role;       // keep int id as fallback
+            });
             setUserRoles(roleDict);
 
         } catch (err) {
@@ -438,12 +441,13 @@ export default function Conversations() {
 
     // 4. Selection Event for New Users (from search results)
     const handleSelectSearchResult = (searchedUser) => {
-        const existingConv = conversations.find(c => c.participantId === searchedUser.id);
+        const identityId = searchedUser.userId; // Identity string ID
+        const existingConv = conversations.find(c => c.participantId === identityId);
         if (existingConv) {
             handleSelectConversation(existingConv);
         } else {
             // New empty chat flow
-            setActiveUserId(searchedUser.id);
+            setActiveUserId(identityId);
             setActiveUserName(searchedUser.name);
             setActiveUserRole(searchedUser.role);
             setMessages([]);
