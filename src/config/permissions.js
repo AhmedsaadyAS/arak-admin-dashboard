@@ -57,9 +57,7 @@ export const ROLE_PERMISSIONS = {
 
     'Admin': {
         permissions: [
-            // Full access including user management
             PERMISSIONS.DASHBOARD,
-            PERMISSIONS.USER_MANAGEMENT,
             PERMISSIONS.STUDENTS,
             PERMISSIONS.TEACHERS,
             PERMISSIONS.SCHEDULE,

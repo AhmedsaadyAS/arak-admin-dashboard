@@ -17,7 +17,6 @@ import TeacherDetails from "./pages/Teachers/TeacherDetails";
 import GradebookMonitor from "./pages/Evaluations/GradebookMonitor";
 import TaskMonitor from "./components/TaskMonitor";
 import Events from "./pages/Events/Events";
-import Reports from "./pages/Reports/Reports";
 import Chat from "./pages/Chat/Chat";
 import UserManagement from "./pages/User/UserManagement";
 import UserProfile from "./pages/User/UserProfile";
@@ -124,13 +123,7 @@ export default function App() {
 
 
 
-                            <Route path="/reports" element={
-                                <ProtectedRoute requiredPermission={PERMISSIONS.REPORTS}>
-                                    <Layout title="Reports & Analytics">
-                                        <Reports />
-                                    </Layout>
-                                </ProtectedRoute>
-                            } />
+
 
                             <Route path="/evaluations" element={
                                 <ProtectedRoute requiredPermission={PERMISSIONS.GRADEBOOK}>

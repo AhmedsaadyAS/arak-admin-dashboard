@@ -35,10 +35,6 @@ export default function Topbar({ pageTitle = "Dashboard" }) {
             <RefreshCw size={20} />
           </button>
           <MessageBell />
-          <button className="icon-btn">
-            <Bell size={20} />
-            <span className="notification-dot"></span>
-          </button>
           <Link to="/settings" className="icon-btn" title="Settings">
             <Settings size={20} />
           </Link>

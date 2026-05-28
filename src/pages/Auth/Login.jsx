@@ -55,8 +55,8 @@ export default function Login() {
     };
 
     const handleDemoLogin = async () => {
-        setValue('email', 'admin@arak.com');
-        setValue('password', 'Admin@123');
+        setValue('email', 'superadmin@arak.com');
+        setValue('password', 'SuperAdmin@123');
         setValue('rememberMe', true);
 
         // Auto-submit after a short delay to show the filled values

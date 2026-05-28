@@ -8,13 +8,14 @@ import { Copy } from 'lucide-react';
  */
 export default function DemoCredentials({ onQuickLogin, copySuccess = '', onCopy }) {
     const demoAccounts = [
-        { email: 'admin@arak.com', password: 'Admin@123', label: '📧', description: 'Super Admin' },
-        { email: 'parent1@arak.com', password: 'Parent@123', label: '👤', description: 'Test Restriction' },
+        { email: 'superadmin@arak.com', password: 'SuperAdmin@123', label: '👑' },
+        { email: 'parent1@arak.com', password: 'Parent@123', label: '👤' },
     ];
 
     const roleAccounts = [
-        { email: 'academic@arak.com', password: 'Academic Admin@123', label: 'Login as Academic Admin' },
-        { email: 'teacher1@arak.com', password: 'Teacher@123', label: 'Login as Teacher' },
+        { email: 'admin@arak.com', password: 'Admin@123', label: 'Login as Admin' },
+        { email: 'academic@arak.com', password: 'Academic@123', label: 'Login as Academic Admin' },
+        { email: 'teacher@arak.com', password: 'Teacher@123', label: 'Login as Teacher' },
     ];
 
     return (
@@ -57,30 +58,18 @@ export default function DemoCredentials({ onQuickLogin, copySuccess = '', onCopy
                                 style={{ marginTop: '0.5rem', borderTop: '1px dashed #eee', paddingTop: '0.5rem' }}
                             />
                         )}
-                        {index === 1 && (
-                            <div className="credential-row">
-                                <button
-                                    type="button"
-                                    onClick={() => onQuickLogin(account.email, account.password)}
-                                    className="copy-button"
-                                    style={{ width: 'auto', padding: '2px 8px' }}
-                                >
-                                    {account.description}
-                                </button>
-                            </div>
-                        )}
                     </React.Fragment>
                 ))}
 
                 {/* Role-based quick login buttons */}
-                <div className="credential-row" style={{ marginTop: '0.5rem', display: 'flex', gap: '8px' }}>
+                <div className="credential-row" style={{ marginTop: '0.5rem', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                     {roleAccounts.map((account) => (
                         <button
                             key={account.email}
                             type="button"
                             onClick={() => onQuickLogin(account.email, account.password)}
                             className="copy-button"
-                            style={{ width: 'auto', padding: '2px 8px', flex: 1, justifyContent: 'center' }}
+                            style={{ width: 'auto', padding: '2px 8px', flex: '1 1 0%', minWidth: '110px', justifyContent: 'center' }}
                         >
                             {account.label}
                         </button>

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "../../services/api";
+import chatbotIcon from "../../assets/chatbot.png";
 
 interface Message {
   id: number;
@@ -113,16 +114,25 @@ export default function ChatWidget() {
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700"
+        className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all p-0 overflow-hidden border-none bg-transparent"
       >
-        💬
+        <img
+          src={chatbotIcon}
+          alt="Arak Chatbot"
+          className="w-full h-full object-cover"
+        />
       </button>
 
       {isOpen && (
         <div className="fixed bottom-24 right-6 z-50 flex h-[500px] w-80 flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
           <div className="flex items-center justify-between bg-blue-600 px-4 py-3 text-white">
             <span className="flex items-center gap-2">
-              Arak Assistant
+              <img
+                src={chatbotIcon}
+                alt="Avatar"
+                className="w-6 h-6 rounded-full object-cover border border-white/20"
+              />
+              <span>Arak Assistant</span>
               <button type="button" onClick={() => setShowSettings(!showSettings)} className="text-lg hover:opacity-80" title="Settings">⚙️</button>
             </span>
             <button type="button" onClick={() => setIsOpen(false)}>

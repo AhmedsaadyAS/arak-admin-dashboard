@@ -41,13 +41,6 @@ export const navGroups: NavGroup[] = [
                 icon: React.createElement(LayoutDashboard, { size: 20 }),
                 permission: PERMISSIONS.DASHBOARD,
             },
-            {
-                key: "reports",
-                label: "Reports",
-                path: "/reports",
-                icon: React.createElement(BarChart2, { size: 20 }),
-                permission: PERMISSIONS.REPORTS,
-            },
         ],
     },
     {
