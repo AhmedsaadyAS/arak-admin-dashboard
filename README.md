@@ -74,9 +74,10 @@ npm run dev
 
 | Role | Email | Password | Access Level |
 |------|-------|----------|--------------|
-| **Super Admin** | `admin@arak.com` | `Admin@123` | Full access to all modules |
-| **Academic Admin** | `academic@arak.com` | `Academic@123` | Grades, schedules, tasks |
-| **Teacher** | `teacher1@arak.com` | `Teacher@123` | Own classes only |
+| **Super Admin** | `superadmin@arak.com` | `SuperAdmin@123` | Full system access & user management |
+| **Admin** | `admin@arak.com` | `Admin@123` | School administrator (restricted users) |
+| **Academic Admin** | `academic@arak.com` | `Academic@123` | Grades, schedules, tasks, events |
+| **Teacher** | `teacher@arak.com` | `Teacher@123` | Assigned classes only |
 | **Parent** | `parent1@arak.com` | `Parent@123` | View children's data |
 
 > ⚠️ **Change these passwords in production!** Set via environment variable: `ARAK_DEFAULT_PASSWORD`
