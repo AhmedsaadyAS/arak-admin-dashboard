@@ -21,8 +21,16 @@ export default function MessageBell() {
     };
 
     fetchCount();
+    
+    // Listen to custom update event to immediately update badge counts
+    window.addEventListener('messages-updated', fetchCount);
+    
     const interval = setInterval(fetchCount, 30000); // Poll every 30s
-    return () => clearInterval(interval);
+    
+    return () => {
+      window.removeEventListener('messages-updated', fetchCount);
+      clearInterval(interval);
+    };
   }, []);
 
   return (

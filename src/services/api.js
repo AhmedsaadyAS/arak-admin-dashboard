@@ -441,6 +441,12 @@ export const api = {
         return response.data;
     },
 
+    getReceivedMessagesCount: async () => {
+        const response = await apiClient.get('/Conversations/received-count');
+        return response.data.count;
+    },
+
+
     getMessages: async (userId, page = 1, pageSize = 50) => {
         const safeId = String(userId);
         const response = await apiClient.get(`/Conversations/${safeId}/messages`, {
@@ -452,12 +458,16 @@ export const api = {
     sendMessage: async (userId, data) => {
         const safeId = String(userId);
         const response = await apiClient.post(`/Conversations/${safeId}/messages`, data);
+        // Notify components that message state has changed
+        window.dispatchEvent(new CustomEvent('messages-updated'));
         return response.data;
     },
 
     markConversationRead: async (userId) => {
         const safeId = String(userId);
         const response = await apiClient.patch(`/Conversations/${safeId}/read`);
+        // Notify components that message state has changed
+        window.dispatchEvent(new CustomEvent('messages-updated'));
         return response.data;
     },
 

@@ -41,6 +41,15 @@ export default function Dashboard() {
   const canViewFees = hasRole(['Admin', 'Fees Admin']);
   const canViewPerformanceChart = hasRole(['Admin', 'Academic Admin']); // Assuming this maps to Academic Admin or Admin
 
+  const fetchMessagesCount = async () => {
+    try {
+      const count = await api.getReceivedMessagesCount();
+      setMessagesCount(count || 0);
+    } catch (e) {
+      console.warn("Failed to fetch received messages count", e);
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -59,12 +68,7 @@ export default function Dashboard() {
         }
 
         // Fetch real Messages
-        try {
-          const convsRes = await api.getConversations();
-          setMessagesCount(Array.isArray(convsRes) ? convsRes.length : 0);
-        } catch (e) {
-          console.warn("Failed to fetch conversations", e);
-        }
+        await fetchMessagesCount();
       } catch (error) {
         console.error("Dashboard verify failed", error);
       } finally {
@@ -72,6 +76,12 @@ export default function Dashboard() {
       }
     };
     fetchData();
+
+    // Listen to custom update event to immediately update stats card
+    window.addEventListener('messages-updated', fetchMessagesCount);
+    return () => {
+      window.removeEventListener('messages-updated', fetchMessagesCount);
+    };
   }, []);
 
   // Compute a dynamic and informative recent attendance list from real students

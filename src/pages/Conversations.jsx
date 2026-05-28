@@ -486,6 +486,9 @@ export default function Conversations() {
             // Swap out temporary optimistic message with confirmed database record
             setMessages(prev => prev.map(m => m.id === tempId ? realMsg : m));
 
+            // Mark conversation as read to ensure unread counts are cleared on response
+            await api.markConversationRead(activeUserId);
+
             // Proactively refresh the left sidebar chats list
             const updatedChats = await api.getConversations();
             const rawChats = Array.isArray(updatedChats) ? updatedChats : (updatedChats.data?.data ?? updatedChats.data ?? []);
